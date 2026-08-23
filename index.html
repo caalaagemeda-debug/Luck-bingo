@@ -1,96 +1,598 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Telegram Bingo — Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Bingo</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:#0e1621;color:#eef4f8}
-.app{max-width:1100px;margin:auto;min-height:100vh;background:#17212b}
-header{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #263746;position:sticky;top:0;background:#17212b;z-index:2}
-.logo{font-weight:800;font-size:20px}.badge{font-size:12px;background:#244b63;color:#8fd7ff;padding:5px 9px;border-radius:99px}
-main{padding:20px}.screen{display:none}.screen.active{display:block}.card{background:#202d39;border:1px solid #2c3e4d;border-radius:16px;padding:18px;margin-bottom:16px}
-button{border:0;border-radius:12px;padding:12px 16px;background:#229ed9;color:#fff;font-weight:700;cursor:pointer}button.secondary{background:#2b3b48}button.danger{background:#b84a5a}
-input{width:100%;padding:13px;border-radius:10px;border:1px solid #385061;background:#111c25;color:#fff;margin:8px 0 14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px}.game h3{margin:0 0 8px}.price{font-size:24px;font-weight:800}.muted{color:#9fb0bd}.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-nav{display:flex;gap:8px;overflow:auto;padding:12px 20px;border-bottom:1px solid #263746}nav button{white-space:nowrap;background:#243441}.nav-active{background:#229ed9!important}
-.numbers{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:14px 0}.num{aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#263746;font-size:13px}.num.drawn{background:#229ed9;font-weight:800}.num.latest{outline:3px solid #f2c94c}
-.bingo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:420px;margin:auto}.cell{background:#f4f7f9;color:#15202b;border-radius:7px;aspect-ratio:1;display:grid;place-items:center;font-weight:800}.cell.mark{background:#53c7a2}.cell.free{background:#f2c94c}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#243441;padding:12px 18px;border-radius:12px;display:none;z-index:5}
-.login{max-width:480px;margin:50px auto;text-align:center}.tg{font-size:48px;margin-bottom:10px}
-@media(max-width:600px){main{padding:14px}.numbers{grid-template-columns:repeat(10,1fr);gap:4px}.num{font-size:10px}}
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  color: #222;
+}
+
+.app {
+  max-width: 600px;
+  margin: auto;
+  min-height: 100vh;
+  background: white;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  padding: 15px 0 25px;
+}
+
+.logo {
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.subtitle {
+  color: #777;
+  margin-top: 5px;
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 15px rgba(0,0,0,.06);
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  border: 0;
+  border-radius: 12px;
+  background: #222;
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #eee;
+  color: #222;
+}
+
+button.stop {
+  background: #b00020;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+.ticket {
+  font-size: 42px;
+  font-weight: bold;
+  text-align: center;
+  margin: 15px 0;
+}
+
+.countdown {
+  text-align: center;
+  font-size: 70px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.countdown-label {
+  text-align: center;
+  color: #777;
+  font-size: 16px;
+}
+
+.drawn {
+  text-align: center;
+  padding: 25px;
+}
+
+.drawn-number {
+  font-size: 80px;
+  font-weight: bold;
+}
+
+.drawn-letter {
+  font-size: 28px;
+  font-weight: bold;
+  color: #777;
+}
+
+.history {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.history-item {
+  padding: 12px 5px;
+  border-radius: 10px;
+  background: #eee;
+  text-align: center;
+  font-weight: bold;
+}
+
+.status {
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  background: #f1f1f1;
+  margin-bottom: 15px;
+}
+
+.notice {
+  color: #777;
+  text-align: center;
+  font-size: 14px;
+}
 </style>
 </head>
+
 <body>
+
 <div class="app">
-<header><div class="logo">🎱 Telegram Bingo</div><span class="badge">DEMO MONEY</span></header>
 
-<section id="login" class="screen active">
-<main><div class="card login">
-<div class="tg">✈️</div><h1>Welcome to Bingo</h1><p class="muted">Telegram-style demo login. No real account or money is used.</p>
-<input id="name" placeholder="Telegram username" value="demo_player">
-<button onclick="login()">Continue with Telegram</button>
-</div></main>
+<header>
+  <div class="logo">🎱 Lucky Bingo</div>
+  <div class="subtitle">Automatic Bingo Game</div>
+</header>
+
+
+<!-- CREATE GAME -->
+<section id="createScreen" class="screen active">
+
+  <div class="card">
+
+    <h1>Create Game</h1>
+
+    <p>
+      Choose your ticket number from <b>1 to 180</b>.
+    </p>
+
+    <label for="ticketInput">Ticket number</label>
+
+    <input
+      id="ticketInput"
+      type="number"
+      min="1"
+      max="180"
+      placeholder="Enter ticket 1–180"
+    >
+
+    <button onclick="createGame()">
+      Create Game
+    </button>
+
+  </div>
+
+  <div class="card">
+
+    <h3>How the game works</h3>
+
+    <p>1. Choose your ticket.</p>
+    <p>2. Start the game.</p>
+    <p>3. Wait 50 seconds.</p>
+    <p>4. A bingo number is drawn automatically.</p>
+    <p>5. Every 50 seconds another number is drawn.</p>
+
+  </div>
+
 </section>
 
-<section id="gameapp" class="screen">
-<nav>
-<button onclick="show('lobby')" id="n-lobby">Lobby</button>
-<button onclick="show('live')" id="n-live">Live Game</button>
-<button onclick="show('wallet')" id="n-wallet">Wallet</button>
-<button onclick="show('withdraw')" id="n-withdraw">Withdraw</button>
-</nav>
-<main>
-<div id="lobby" class="screen active">
-<div class="row"><div><h1>Bingo Lobby</h1><p class="muted">Choose a demo game.</p></div><div>👤 <span id="user"></span></div></div>
-<div class="grid">
-<div class="card game"><h3>⚡ Quick Bingo</h3><p class="muted">Next game · 30 seconds</p><div class="price">ETB 10</div><p>Prize pool: ETB 250</p><button onclick="buy(10)">Buy Card</button></div>
-<div class="card game"><h3>🏆 Mega Bingo</h3><p class="muted">Next game · 2 minutes</p><div class="price">ETB 25</div><p>Prize pool: ETB 750</p><button onclick="buy(25)">Buy Card</button></div>
-<div class="card game"><h3>💎 VIP Bingo</h3><p class="muted">Next game · 5 minutes</p><div class="price">ETB 50</div><p>Prize pool: ETB 2,000</p><button onclick="buy(50)">Buy Card</button></div>
-</div>
-<div class="card"><h3>Demo account</h3><p>Starting balance: ETB 500. Purchases and winnings are simulated in your browser.</p></div>
-</div>
 
-<div id="live" class="screen">
-<div class="row"><div><h1>Live Bingo</h1><p class="muted">Game #DEMO-2026</p></div><button class="secondary" onclick="startDraw()">Draw Number</button></div>
-<div class="card"><div id="latest" style="text-align:center;font-size:42px;font-weight:900">—</div><p class="muted" style="text-align:center">Latest number</p><div id="numbers" class="numbers"></div></div>
-<div class="card"><h3>Your Bingo Card</h3><div id="bingo" class="bingo"></div><p class="muted">Click cells to mark them. In this prototype, a completed row/column/diagonal awards a demo prize.</p></div>
-</div>
+<!-- START GAME -->
+<section id="startScreen" class="screen">
 
-<div id="wallet" class="screen">
-<h1>Wallet</h1><div class="grid">
-<div class="card"><p class="muted">Available balance</p><div class="price">ETB <span id="balance">500</span></div></div>
-<div class="card"><p class="muted">Demo winnings</p><div class="price">ETB <span id="winnings">0</span></div></div>
-</div>
-<div class="card"><h3>Transactions</h3><div id="tx" class="muted">No transactions yet.</div></div>
-</div>
+  <div class="card">
 
-<div id="withdraw" class="screen">
-<h1>Withdraw</h1><div class="card"><p class="muted">Demo-only withdrawal simulation</p><p>Available: ETB <b id="wbal">500</b></p>
-<label>Amount</label><input id="amount" type="number" min="1" placeholder="100">
-<label>Demo payment account</label><input id="account" placeholder="09xxxxxxxx">
-<button onclick="withdraw()">Request Demo Withdrawal</button>
-</div>
-<div class="card"><h3>Notice</h3><p class="muted">This prototype does not move real money and is not connected to a payment provider.</p></div>
-</div>
-</main>
+    <h1>Game Ready</h1>
+
+    <div class="ticket" id="selectedTicket">
+      Ticket 1
+    </div>
+
+    <p class="notice">
+      Your ticket is ready.
+    </p>
+
+    <button onclick="startGame()">
+      ▶️ START GAME
+    </button>
+
+    <button class="secondary" onclick="backToCreate()">
+      Change Ticket
+    </button>
+
+  </div>
+
 </section>
+
+
+<!-- LIVE GAME -->
+<section id="gameScreen" class="screen">
+
+  <div class="status">
+    🎟️ Ticket <b id="liveTicket">1</b>
+  </div>
+
+  <div class="card">
+
+    <div class="countdown-label">
+      NEXT NUMBER IN
+    </div>
+
+    <div class="countdown" id="countdown">
+      50
+    </div>
+
+    <div class="drawn">
+
+      <div class="drawn-letter" id="lastLetter">
+        Waiting
+      </div>
+
+      <div class="drawn-number" id="lastNumber">
+        —
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>🎱 Numbers Drawn</h3>
+
+    <div id="history" class="history">
+      <div class="notice">
+        No numbers drawn yet
+      </div>
+    </div>
+
+  </div>
+
+
+  <button class="stop" onclick="stopGame()">
+    ⛔ STOP GAME
+  </button>
+
+</section>
+
+
+<!-- GAME FINISHED -->
+<section id="finishedScreen" class="screen">
+
+  <div class="card">
+
+    <h1>Game Stopped</h1>
+
+    <div class="ticket" id="finishedTicket">
+      Ticket 1
+    </div>
+
+    <p id="finishedMessage" class="notice">
+      Game stopped.
+    </p>
+
+    <button onclick="backToCreate()">
+      Create New Game
+    </button>
+
+  </div>
+
+</section>
+
 </div>
-<div id="toast" class="toast"></div>
+
+
 <script>
-let balance=500,winnings=0,card=[],drawn=[],tx=[];
-function login(){let n=document.getElementById('name').value.trim()||'demo_player';document.getElementById('user').textContent='@'+n;document.getElementById('login').classList.remove('active');document.getElementById('gameapp').classList.add('active');show('lobby');}
-function show(id){document.querySelectorAll('#gameapp main>.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('nav-active'));let b=document.getElementById('n-'+id);if(b)b.classList.add('nav-active');if(id==='wallet')refresh();if(id==='withdraw')refresh();}
-function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2200);}
-function buy(cost){if(balance<cost)return toast('Not enough demo balance');balance-=cost;tx.unshift('Bought Bingo card — ETB '+cost);generateCard();refresh();show('live');toast('Card purchased. Good luck!');}
-function generateCard(){let nums=[];while(nums.length<24){let n=1+Math.floor(Math.random()*75);if(!nums.includes(n))nums.push(n)}card=nums;let el=document.getElementById('bingo');el.innerHTML='';let heads=['B','I','N','G','O'];heads.forEach(h=>{let c=document.createElement('div');c.textContent=h;c.style.color='#8fd7ff';el.appendChild(c)});for(let i=0;i<25;i++){let c=document.createElement('div');c.className='cell';if(i===12){c.textContent='FREE';c.classList.add('free','mark')}else{let idx=i>12?i-1:i;c.textContent=card[idx];c.onclick=()=>{c.classList.toggle('mark');checkWin()}}el.appendChild(c)}}
-function startDraw(){if(drawn.length>=75)return toast('All numbers drawn');let n;do{n=1+Math.floor(Math.random()*75)}while(drawn.includes(n));drawn.push(n);document.getElementById('latest').textContent=n;renderNumbers();autoMark(n);checkWin();}
-function renderNumbers(){let e=document.getElementById('numbers');e.innerHTML='';for(let i=1;i<=75;i++){let d=document.createElement('div');d.className='num'+(drawn.includes(i)?' drawn':'')+(i===drawn.at(-1)?' latest':'');d.textContent=i;e.appendChild(d)}}
-function autoMark(n){document.querySelectorAll('#bingo .cell').forEach(c=>{if(c.textContent==n)c.classList.add('mark')})}
-function checkWin(){let cells=[...document.querySelectorAll('#bingo .cell')];if(cells.length<30)return;let ok=false;for(let r=0;r<5;r++){if([0,1,2,3,4].every(j=>cells[5+j+r*5].classList.contains('mark')))ok=true}for(let c=0;c<5;c++){if([0,1,2,3,4].every(r=>cells[5+c+r*5].classList.contains('mark')))ok=true}if([0,6,12,18,24].every(i=>cells[5+i].classList.contains('mark'))||[4,8,12,16,20].every(i=>cells[5+i].classList.contains('mark')))ok=true;if(ok&&!window.won){window.won=true;balance+=100;winnings+=100;tx.unshift('🎉 Bingo win — ETB 100');refresh();toast('BINGO! +ETB 100 demo winnings');}}
-function refresh(){document.getElementById('balance').textContent=balance;document.getElementById('wbal').textContent=balance;document.getElementById('winnings').textContent=winnings;document.getElementById('tx').innerHTML=tx.length?tx.map(x=>'<div style="padding:8px 0;border-bottom:1px solid #2c3e4d">'+x+'</div>').join(''):'No transactions yet.'}
-function withdraw(){let a=Number(document.getElementById('amount').value),acct=document.getElementById('account').value.trim();if(!a||a<=0||a>balance)return toast('Enter a valid amount');if(!acct)return toast('Enter a demo payment account');balance-=a;tx.unshift('Withdrawal requested — ETB '+a+' to '+acct);refresh();toast('Demo withdrawal submitted');document.getElementById('amount').value='';}
-generateCard();renderNumbers();refresh();
+
+let selectedTicket = null;
+
+let gameRunning = false;
+
+let countdown = 50;
+
+let countdownTimer = null;
+
+let drawnNumbers = [];
+
+
+// --------------------------------------------------
+// SCREEN CONTROL
+// --------------------------------------------------
+
+function showScreen(id) {
+
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("active");
+}
+
+
+// --------------------------------------------------
+// CREATE GAME
+// --------------------------------------------------
+
+function createGame() {
+
+  const input = document.getElementById("ticketInput");
+
+  const ticket = Number(input.value);
+
+  if (!Number.isInteger(ticket) || ticket < 1 || ticket > 180) {
+
+    alert("Please choose a ticket number from 1 to 180.");
+
+    return;
+  }
+
+  selectedTicket = ticket;
+
+  document.getElementById("selectedTicket").textContent =
+    "Ticket " + selectedTicket;
+
+  showScreen("startScreen");
+}
+
+
+// --------------------------------------------------
+// START GAME
+// --------------------------------------------------
+
+function startGame() {
+
+  if (!selectedTicket) {
+
+    alert("Choose a ticket first.");
+
+    return;
+  }
+
+  gameRunning = true;
+
+  countdown = 50;
+
+  drawnNumbers = [];
+
+  document.getElementById("liveTicket").textContent =
+    selectedTicket;
+
+  document.getElementById("countdown").textContent =
+    countdown;
+
+  document.getElementById("lastNumber").textContent =
+    "—";
+
+  document.getElementById("lastLetter").textContent =
+    "Waiting";
+
+  renderHistory();
+
+  showScreen("gameScreen");
+
+  startCountdown();
+}
+
+
+// --------------------------------------------------
+// 50 SECOND COUNTDOWN
+// --------------------------------------------------
+
+function startCountdown() {
+
+  clearInterval(countdownTimer);
+
+  countdown = 50;
+
+  document.getElementById("countdown").textContent =
+    countdown;
+
+  countdownTimer = setInterval(function() {
+
+    if (!gameRunning) {
+
+      clearInterval(countdownTimer);
+
+      return;
+    }
+
+    countdown--;
+
+    document.getElementById("countdown").textContent =
+      countdown;
+
+    if (countdown <= 0) {
+
+      drawNumber();
+
+      countdown = 50;
+
+      document.getElementById("countdown").textContent =
+        countdown;
+    }
+
+  }, 1000);
+}
+
+
+// --------------------------------------------------
+// DRAW NUMBER
+// --------------------------------------------------
+
+function drawNumber() {
+
+  if (drawnNumbers.length >= 180) {
+
+    stopGame();
+
+    return;
+  }
+
+
+  let number;
+
+  do {
+
+    number = Math.floor(Math.random() * 180) + 1;
+
+  } while (drawnNumbers.includes(number));
+
+
+  drawnNumbers.push(number);
+
+
+  const letter = getBingoLetter(number);
+
+
+  document.getElementById("lastNumber").textContent =
+    number;
+
+  document.getElementById("lastLetter").textContent =
+    "🎱 " + letter;
+
+
+  renderHistory();
+}
+
+
+// --------------------------------------------------
+// BINGO LETTER
+// --------------------------------------------------
+
+function getBingoLetter(number) {
+
+  if (number >= 1 && number <= 36) {
+    return "B";
+  }
+
+  if (number >= 37 && number <= 72) {
+    return "I";
+  }
+
+  if (number >= 73 && number <= 108) {
+    return "N";
+  }
+
+  if (number >= 109 && number <= 144) {
+    return "G";
+  }
+
+  return "O";
+}
+
+
+// --------------------------------------------------
+// HISTORY
+// --------------------------------------------------
+
+function renderHistory() {
+
+  const history = document.getElementById("history");
+
+  if (drawnNumbers.length === 0) {
+
+    history.innerHTML =
+      '<div class="notice">No numbers drawn yet</div>';
+
+    return;
+  }
+
+
+  history.innerHTML = drawnNumbers
+    .slice()
+    .reverse()
+    .map(function(number) {
+
+      return `
+        <div class="history-item">
+          ${getBingoLetter(number)}${number}
+        </div>
+      `;
+
+    })
+    .join("");
+}
+
+
+// --------------------------------------------------
+// STOP GAME
+// --------------------------------------------------
+
+function stopGame() {
+
+  gameRunning = false;
+
+  clearInterval(countdownTimer);
+
+  document.getElementById("finishedTicket").textContent =
+    "Ticket " + selectedTicket;
+
+  document.getElementById("finishedMessage").textContent =
+    drawnNumbers.length +
+    " number(s) were drawn.";
+
+  showScreen("finishedScreen");
+}
+
+
+// --------------------------------------------------
+// CHANGE TICKET
+// --------------------------------------------------
+
+function backToCreate() {
+
+  gameRunning = false;
+
+  clearInterval(countdownTimer);
+
+  selectedTicket = null;
+
+  drawnNumbers = [];
+
+  document.getElementById("ticketInput").value = "";
+
+  showScreen("createScreen");
+}
+
 </script>
+
 </body>
 </html>
