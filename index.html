@@ -6,710 +6,394 @@
 <title>Lucky Bingo</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fraunces:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
 
 :root{
-  --bg:#071426;
-  --bg2:#0d1d35;
-  --primary:#5967f2;
-  --primary2:#7b86ff;
-  --accent:#20d3a2;
-  --accent2:#45e5bb;
+  --bg:#071a2e;
+  --bg2:#102b4d;
+  --panel:#f5f6fa;
+  --text:#182235;
+  --muted:#8f99ad;
+  --blue:#5867e8;
+  --cyan:#28d6b0;
   --white:#ffffff;
-  --card:#f7f8fc;
-  --line:#dce1ed;
-  --ink:#182033;
-  --muted:#6c7486;
-  --red:#e05252;
-  --locked:#a4a9b5;
 }
 
-*{
-  box-sizing:border-box;
-}
-
-html,body{
-  margin:0;
-  min-height:100%;
-}
+*{box-sizing:border-box}
 
 body{
+  margin:0;
   min-height:100vh;
   background:
-    radial-gradient(
-      circle at 50% -10%,
-      rgba(89,103,242,.35),
-      transparent 45%
-    ),
-    linear-gradient(
-      145deg,
-      var(--bg),
-      var(--bg2)
-    );
-
-  font-family:'Fraunces',serif;
+    radial-gradient(circle at top,#19345c 0%,#071a2e 55%,#061426 100%);
   color:white;
-  padding:30px 12px 50px;
-
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+  font-family:'Space Mono',monospace;
+  padding:25px 12px 50px;
 }
 
-/* =========================
-   HEADER
-========================= */
-
-.header{
+.app{
   width:100%;
-  max-width:700px;
-  text-align:center;
-  margin-bottom:22px;
+  max-width:760px;
+  margin:auto;
 }
 
 .logo{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(3rem,11vw,5rem);
-  letter-spacing:.08em;
-  color:var(--accent2);
-  text-shadow:0 5px 20px rgba(0,0,0,.35);
+  text-align:center;
+  margin:10px 0 5px;
+}
+
+.logo h1{
   margin:0;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.5rem,12vw,6rem);
+  letter-spacing:.05em;
+  color:var(--cyan);
 }
 
 .subtitle{
-  margin:5px 0 0;
-  font-family:'Space Mono',monospace;
-  font-size:.68rem;
-  letter-spacing:.15em;
-  text-transform:uppercase;
-  color:rgba(255,255,255,.55);
-}
-
-/* =========================
-   SCREENS
-========================= */
-
-.screen{
-  width:100%;
-  max-width:700px;
-  display:none;
-  flex-direction:column;
-  align-items:center;
-}
-
-.screen.active{
-  display:flex;
-}
-
-/* =========================
-   PANEL
-========================= */
-
-.panel{
-  width:100%;
-  background:var(--card);
-  color:var(--ink);
-  border-radius:18px;
-  padding:20px;
-  box-shadow:0 15px 40px rgba(0,0,0,.28);
-}
-
-.panel-title{
-  font-family:'Bebas Neue',sans-serif;
   text-align:center;
-  font-size:1.8rem;
-  letter-spacing:.1em;
-  color:var(--primary);
-  margin-bottom:18px;
+  color:#9aa5bb;
+  letter-spacing:.15em;
+  font-size:.8rem;
+  margin-bottom:30px;
 }
 
-/* =========================
-   ROOM LIST
-========================= */
+.screen{display:none}
+.screen.active{display:block}
 
-.room-list{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
+.rooms{
+  display:grid;
+  gap:16px;
 }
 
-.room-card{
-  width:100%;
+.room{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;
+  padding:22px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.room:hover{
+  transform:translateY(-2px);
+  border-color:var(--cyan);
+}
+
+.room-title{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:15px;
-
-  background:white;
-  border:2px solid transparent;
-  border-radius:16px;
-
-  padding:18px;
-
-  cursor:pointer;
-
-  transition:
-    transform .15s ease,
-    border-color .15s ease,
-    box-shadow .15s ease;
-
-  box-shadow:0 6px 18px rgba(0,0,0,.10);
 }
 
-.room-card:hover{
-  border-color:var(--primary);
-  transform:translateY(-2px);
-  box-shadow:0 12px 25px rgba(0,0,0,.16);
-}
-
-.room-card:active{
-  transform:scale(.98);
-}
-
-.room-name{
+.room-title h2{
+  margin:0;
   font-family:'Bebas Neue',sans-serif;
-  font-size:1.45rem;
-  letter-spacing:.07em;
-  color:var(--ink);
-}
-
-.room-meta{
-  margin-top:5px;
-  font-family:'Space Mono',monospace;
-  font-size:.65rem;
-  color:var(--muted);
-  text-transform:uppercase;
-  letter-spacing:.04em;
+  font-size:2rem;
+  color:white;
+  letter-spacing:.05em;
 }
 
 .room-price{
-  min-width:90px;
-  text-align:center;
-  background:var(--primary);
-  color:white;
-  border-radius:12px;
-  padding:10px 12px;
+  color:var(--cyan);
+  font-size:1.3rem;
+  font-weight:bold;
 }
 
-.room-price .amount{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:1.5rem;
-  letter-spacing:.05em;
+.room-info{
+  margin-top:15px;
+  color:#aeb8ca;
+  font-size:.75rem;
+  line-height:1.8;
 }
 
-.room-price .label{
-  font-family:'Space Mono',monospace;
-  font-size:.55rem;
-  opacity:.8;
-}
-
-/* =========================
-   SELECT HEADER
-========================= */
-
-.room-header{
-  width:100%;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-
-  margin-bottom:10px;
-
-  font-family:'Space Mono',monospace;
-  font-size:.72rem;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-
-  color:rgba(255,255,255,.7);
-}
-
-.room-timer{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:2rem;
-  color:var(--accent2);
-}
-
-.room-stats{
-  width:100%;
+.stats{
   display:flex;
   justify-content:center;
-  gap:15px;
   flex-wrap:wrap;
-
-  margin-bottom:14px;
-
-  font-family:'Space Mono',monospace;
-  font-size:.65rem;
-  text-transform:uppercase;
-
-  color:rgba(255,255,255,.65);
+  gap:22px;
+  margin:15px 0 22px;
+  font-size:.75rem;
+  color:#aab4c7;
 }
 
-.room-stats b{
-  color:var(--accent2);
+.stats b{
+  color:var(--cyan);
 }
 
-/* =========================
-   CARD SELECT
-========================= */
-
-.search-row{
-  display:flex;
-  justify-content:center;
-  margin-bottom:15px;
-}
-
-.search-row input{
-  width:170px;
-  padding:10px 12px;
-
-  border:1px solid var(--line);
-  border-radius:10px;
-
+.timer{
   text-align:center;
-
-  font-family:'Space Mono',monospace;
-  font-size:.8rem;
-
-  background:white;
-  color:var(--ink);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.3rem;
+  color:var(--cyan);
+  margin-bottom:12px;
 }
 
-.num-grid{
+.panel{
+  background:var(--panel);
+  color:var(--text);
+  border-radius:25px;
+  padding:25px 15px 20px;
+  overflow:hidden;
+}
+
+.panel-title{
+  text-align:center;
+  font-family:'Bebas Neue',sans-serif;
+  color:var(--blue);
+  font-size:2.4rem;
+  letter-spacing:.08em;
+  margin-bottom:20px;
+}
+
+.search{
+  display:block;
+  width:90%;
+  max-width:340px;
+  margin:0 auto 22px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid #d8dce5;
+  background:white;
+  text-align:center;
+  font-family:'Space Mono',monospace;
+  font-size:1rem;
+  outline:none;
+}
+
+.card-grid{
   display:grid;
   grid-template-columns:repeat(5,1fr);
-  gap:7px;
-
-  max-height:390px;
+  gap:10px;
+  max-height:560px;
   overflow-y:auto;
-
-  padding:3px;
+  padding:4px;
 }
 
-.num-btn{
-  min-height:45px;
-
-  border:1px solid var(--line);
-  border-radius:9px;
-
-  background:white;
-  color:var(--ink);
-
+.card-choice{
+  min-height:64px;
+  border:1px solid #d8dce5;
+  border-radius:15px;
+  background:#fff;
+  color:#182235;
   font-family:'Space Mono',monospace;
-  font-weight:700;
-
+  font-weight:bold;
+  font-size:.95rem;
   cursor:pointer;
-
-  transition:.12s;
 }
 
-.num-btn:hover{
-  border-color:var(--primary);
-  transform:translateY(-1px);
+.card-choice:hover{
+  border-color:var(--blue);
 }
 
-.num-btn.selected{
-  background:var(--primary);
+.card-choice.selected{
+  background:var(--blue);
   color:white;
-  border-color:var(--primary);
+  border-color:var(--blue);
 }
 
-.num-btn.locked{
-  background:var(--locked);
-  color:white;
-  border-color:var(--locked);
-  opacity:.65;
+.card-choice.taken{
+  background:#c8ccd5;
+  color:#777;
   cursor:not-allowed;
 }
 
-.pick-status{
-  margin-top:13px;
-
+.selection-info{
   text-align:center;
-
-  font-family:'Space Mono',monospace;
-  font-size:.68rem;
-
-  color:var(--muted);
+  margin-top:17px;
+  color:#777f91;
+  font-size:.75rem;
 }
 
-/* =========================
-   GAME
-========================= */
-
-.stage{
+.start-game{
+  display:block;
   width:100%;
-
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-
-  gap:25px;
-  flex-wrap:wrap;
+  margin-top:18px;
+  padding:15px;
+  border:0;
+  border-radius:14px;
+  background:var(--cyan);
+  color:#082039;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;
+  cursor:pointer;
 }
 
-.caller-panel{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:10px;
-
-  min-width:190px;
+.start-game:disabled{
+  opacity:.4;
 }
 
-.ball-well{
-  width:145px;
-  height:145px;
+.caller{
+  text-align:center;
+}
 
+.ball-ring{
+  width:190px;
+  height:190px;
+  margin:20px auto;
+  border:7px solid var(--cyan);
   border-radius:50%;
-
-  background:
-    radial-gradient(
-      circle at 35% 30%,
-      #294a78,
-      #081529 70%
-    );
-
   display:flex;
-  justify-content:center;
   align-items:center;
-
-  box-shadow:
-    inset 0 0 25px rgba(0,0,0,.65),
-    0 0 0 4px var(--accent);
+  justify-content:center;
+  box-shadow:0 0 35px rgba(40,214,176,.15);
 }
 
 .ball{
-  width:105px;
-  height:105px;
-
+  width:135px;
+  height:135px;
+  background:#f7f8fb;
+  color:#182235;
   border-radius:50%;
-
-  background:
-    radial-gradient(
-      circle at 30% 25%,
-      white,
-      #edf0f8 60%,
-      #ccd2df
-    );
-
   display:flex;
   flex-direction:column;
-  justify-content:center;
   align-items:center;
-
-  box-shadow:
-    0 8px 20px rgba(0,0,0,.4),
-    inset 0 -6px 10px rgba(0,0,0,.1);
+  justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
 }
 
-.ball.pop{
-  animation:popIn .45s cubic-bezier(.34,1.56,.64,1);
+.ball-letter{
+  color:var(--blue);
+  font-size:1.4rem;
+  font-weight:bold;
 }
 
-@keyframes popIn{
-  0%{
-    transform:scale(.2) rotate(-25deg);
-    opacity:0;
-  }
-
-  60%{
-    transform:scale(1.12) rotate(6deg);
-    opacity:1;
-  }
-
-  100%{
-    transform:scale(1) rotate(0);
-  }
-}
-
-.ball .letter{
+.ball-number{
   font-family:'Bebas Neue',sans-serif;
-  font-size:1rem;
-  color:var(--primary);
-}
-
-.ball .num{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:2.5rem;
+  font-size:3.5rem;
   line-height:1;
-  color:var(--ink);
 }
 
-.next-in{
-  font-family:'Space Mono',monospace;
-  font-size:.65rem;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  color:rgba(255,255,255,.55);
+.next-call{
+  color:#929db1;
+  font-size:.8rem;
+  margin:15px 0;
 }
 
-.pause-btn{
-  background:var(--accent);
-  color:#06251d;
-
-  border:0;
-  border-radius:9px;
-
-  padding:9px 20px;
-
-  font-family:'Bebas Neue',sans-serif;
-  font-size:1rem;
-  letter-spacing:.05em;
-
-  cursor:pointer;
+.called{
+  color:#aab4c7;
+  font-size:.72rem;
+  margin-bottom:30px;
 }
 
-.called-log{
-  max-width:230px;
-
-  min-height:40px;
-
-  text-align:center;
-
-  font-family:'Space Mono',monospace;
-  font-size:.63rem;
-  line-height:1.6;
-
-  color:rgba(255,255,255,.55);
+.bingo-card{
+  background:var(--panel);
+  color:var(--text);
+  border-radius:25px;
+  padding:20px 12px;
 }
 
-/* =========================
-   BINGO CARD
-========================= */
-
-.card-wrap{
-  background:var(--card);
-  padding:15px;
-
-  border-radius:16px;
-
-  box-shadow:0 15px 40px rgba(0,0,0,.3);
-}
-
-.card-title{
-  text-align:center;
-
-  font-family:'Bebas Neue',sans-serif;
-  font-size:1.8rem;
-
-  letter-spacing:.2em;
-
-  color:var(--primary);
-}
-
-.card-number{
-  text-align:center;
-
-  margin-bottom:8px;
-
-  font-family:'Space Mono',monospace;
-  font-size:.6rem;
-
-  color:var(--muted);
-}
-
-.grid{
+.bingo-header{
   display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  text-align:center;
+  margin-bottom:10px;
+}
 
-  grid-template-columns:repeat(5,52px);
-  grid-template-rows:repeat(5,52px);
+.bingo-header div{
+  font-family:'Bebas Neue',sans-serif;
+  color:var(--blue);
+  font-size:2.2rem;
+}
 
-  gap:6px;
+.bingo-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
 }
 
 .cell{
-  position:relative;
-
+  aspect-ratio:1;
+  border:1px solid #d9dce4;
+  border-radius:12px;
+  background:#fff;
   display:flex;
-  justify-content:center;
   align-items:center;
-
-  background:white;
-
-  border:1px solid var(--line);
-  border-radius:7px;
-
-  color:var(--ink);
-
-  font-family:'Space Mono',monospace;
-  font-size:.9rem;
-  font-weight:700;
-
-  user-select:none;
-}
-
-.cell.free{
-  color:var(--primary);
-  background:#eef0ff;
-
-  font-family:'Bebas Neue',sans-serif;
-  font-size:.7rem;
-}
-
-.cell.marked::after{
-  content:'';
-
-  position:absolute;
-  inset:5px;
-
-  border-radius:50%;
-
-  background:var(--primary);
-
-  opacity:.9;
-
-  box-shadow:
-    inset 0 -3px 4px rgba(0,0,0,.25);
+  justify-content:center;
+  font-weight:bold;
+  font-size:.85rem;
+  position:relative;
 }
 
 .cell.marked{
+  background:var(--blue);
   color:white;
 }
 
-.cell span{
-  position:relative;
-  z-index:2;
+.cell.free{
+  background:#e8ebff;
+  color:var(--blue);
 }
 
-.cell.win-cell::after{
-  background:var(--accent);
-
-  box-shadow:
-    0 0 12px var(--accent2);
-}
-
-.status{
-  margin-top:10px;
-
+.win{
   text-align:center;
-
-  font-family:'Space Mono',monospace;
-  font-size:.65rem;
-
-  color:var(--muted);
-}
-
-.win-banner{
-  display:none;
-
-  margin-top:10px;
-
-  text-align:center;
-
+  color:var(--cyan);
   font-family:'Bebas Neue',sans-serif;
-  font-size:1.7rem;
-
-  letter-spacing:.1em;
-
-  color:var(--accent);
+  font-size:2.5rem;
+  margin-top:18px;
 }
 
-.win-banner.show{
+.prize{
+  text-align:center;
+  color:var(--text);
+  font-weight:bold;
+  margin-top:8px;
+}
+
+.back{
   display:block;
-  animation:popIn .4s ease;
-}
-
-.link-btn{
-  margin-top:14px;
-
-  background:transparent;
-
+  margin:20px auto 0;
+  padding:12px 25px;
   border:1px solid rgba(255,255,255,.3);
-
-  color:rgba(255,255,255,.7);
-
-  padding:9px 17px;
-
-  border-radius:8px;
-
-  font-family:'Space Mono',monospace;
-  font-size:.65rem;
-
+  border-radius:12px;
+  background:transparent;
+  color:white;
   cursor:pointer;
 }
 
-.link-btn:hover{
-  border-color:var(--accent);
-  color:var(--accent);
-}
+@media(max-width:500px){
+  body{padding:15px 8px 35px}
 
-/* =========================
-   MOBILE
-========================= */
-
-@media(max-width:520px){
-
-  body{
-    padding:20px 10px 40px;
-  }
-
-  .logo{
-    font-size:3.5rem;
+  .logo h1{
+    font-size:4rem;
   }
 
   .panel{
-    padding:14px;
+    padding:20px 8px;
   }
 
-  .room-card{
-    padding:14px;
+  .card-grid{
+    gap:7px;
   }
 
-  .room-name{
-    font-size:1.25rem;
+  .card-choice{
+    min-height:58px;
+    font-size:.8rem;
   }
 
-  .room-price{
-    min-width:75px;
+  .bingo-card{
+    padding:17px 7px;
   }
 
-  .room-price .amount{
-    font-size:1.2rem;
-  }
-
-  .num-grid{
-    grid-template-columns:repeat(5,1fr);
-  }
-
-  .num-btn{
-    min-height:43px;
-    font-size:.72rem;
-  }
-
-  .grid{
-    grid-template-columns:repeat(5,17vw);
-    grid-template-rows:repeat(5,17vw);
+  .bingo-grid,
+  .bingo-header{
     gap:5px;
   }
 
   .cell{
+    border-radius:9px;
     font-size:.72rem;
   }
 
-  .ball-well{
-    width:125px;
-    height:125px;
+  .ball-ring{
+    width:165px;
+    height:165px;
   }
 
   .ball{
-    width:92px;
-    height:92px;
-  }
-
-  .ball .num{
-    font-size:2.1rem;
-  }
-
-  .stage{
-    gap:18px;
-  }
-}
-
-@media(prefers-reduced-motion:reduce){
-  .ball.pop,
-  .win-banner.show{
-    animation:none;
+    width:120px;
+    height:120px;
   }
 }
 </style>
@@ -717,146 +401,124 @@ body{
 
 <body>
 
-<!-- HEADER -->
+<div class="app">
 
-<div class="header">
-  <h1 class="logo">LUCKY BINGO</h1>
-  <p class="subtitle">
-    Rooms · Live Cards · Automatic Caller
-  </p>
-</div>
+  <div class="logo">
+    <h1>LUCKY BINGO</h1>
+  </div>
 
+  <div class="subtitle">
+    ROOMS · LIVE CARDS
+  </div>
 
-<!-- =========================
-     ROOM SCREEN
-========================= -->
+  <!-- ROOMS -->
+  <div class="screen active" id="roomsScreen">
 
-<div class="screen active" id="screenRooms">
+    <div class="rooms">
 
-  <div class="panel">
+      <div class="room" onclick="openRoom(20)">
+        <div class="room-title">
+          <h2>20 ETB PLAY</h2>
+          <div class="room-price">20 ETB</div>
+        </div>
 
-    <div class="panel-title">
-      OPEN ROOMS
+        <div class="room-info">
+          Players: <b id="room20Players">0</b><br>
+          Cards Taken: <b id="room20Cards">0</b><br>
+          Prize: <b id="room20Prize">0 ETB</b>
+        </div>
+      </div>
+
+      <div class="room" onclick="openRoom(40)">
+        <div class="room-title">
+          <h2>40 ETB PLAY</h2>
+          <div class="room-price">40 ETB</div>
+        </div>
+
+        <div class="room-info">
+          Players: <b id="room40Players">0</b><br>
+          Cards Taken: <b id="room40Cards">0</b><br>
+          Prize: <b id="room40Prize">0 ETB</b>
+        </div>
+      </div>
+
     </div>
 
-    <div class="room-list" id="roomList"></div>
-
-  </div>
-
-</div>
-
-
-<!-- =========================
-     CARD SELECT SCREEN
-========================= -->
-
-<div class="screen" id="screenSelect">
-
-  <div class="room-header">
-
-    <span id="roomLabel">
-      Room
-    </span>
-
-    <span class="room-timer" id="selectTimer">
-      50
-    </span>
-
   </div>
 
 
-  <div class="room-stats">
+  <!-- CARD SELECT -->
+  <div class="screen" id="selectScreen">
 
-    <span>
-      Players:
-      <b id="playerCount">Unlimited</b>
-    </span>
-
-    <span>
-      Entry:
-      <b id="entryAmt">0 ETB</b>
-    </span>
-
-  </div>
-
-
-  <div class="panel">
-
-    <div class="panel-title">
-      PICK YOUR CARD
+    <div class="stats">
+      <span>ROOM: <b id="selectRoom">20 ETB PLAY</b></span>
+      <span>PLAYERS: <b id="selectPlayers">0</b></span>
+      <span>CARDS: <b id="selectCards">0</b></span>
+      <span>PRIZE: <b id="selectPrize">0 ETB</b></span>
     </div>
 
-    <div class="search-row">
+    <div class="timer">
+      <span id="timer">50</span>
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-title">
+        PICK YOUR CARDS
+      </div>
 
       <input
+        class="search"
         type="number"
-        id="searchNum"
         min="1"
         max="250"
+        id="search"
         placeholder="Card 1 - 250"
       >
 
-    </div>
+      <div class="card-grid" id="cardGrid"></div>
 
-    <div
-      class="num-grid"
-      id="numGrid"
-    ></div>
+      <div class="selection-info">
+        Selected: <b id="selectedCount">0</b> / 4 cards
+      </div>
 
-    <div
-      class="pick-status"
-      id="pickStatus"
-    >
-      Choose a card before the countdown ends.
+      <div class="selection-info" id="selectionMessage">
+        You can select up to 4 cards.
+      </div>
+
+      <button
+        class="start-game"
+        id="startButton"
+        onclick="startGame()"
+        disabled
+      >
+        WAITING FOR CARDS
+      </button>
+
     </div>
 
   </div>
 
-</div>
 
+  <!-- GAME -->
+  <div class="screen" id="gameScreen">
 
-<!-- =========================
-     GAME SCREEN
-========================= -->
+    <div class="stats">
+      <span>ROOM: <b id="gameRoom">20 ETB PLAY</b></span>
+      <span>PLAYERS: <b id="gamePlayers">0</b></span>
+      <span>CARDS: <b id="gameCards">0</b></span>
+      <span>PRIZE: <b id="gamePrize">0 ETB</b></span>
+    </div>
 
-<div class="screen" id="screenGame">
+    <div class="caller">
 
-  <div class="room-stats">
+      <div class="ball-ring">
 
-    <span>
-      Room:
-      <b id="gameRoomLabel">—</b>
-    </span>
+        <div class="ball">
 
-    <span>
-      Players:
-      <b>Unlimited</b>
-    </span>
+          <div class="ball-letter" id="ballLetter">-</div>
 
-  </div>
-
-
-  <div class="stage">
-
-    <!-- CALLER -->
-
-    <div class="caller-panel">
-
-      <div class="ball-well">
-
-        <div class="ball" id="ball">
-
-          <div
-            class="letter"
-            id="ballLetter"
-          >
-            —
-          </div>
-
-          <div
-            class="num"
-            id="ballNum"
-          >
+          <div class="ball-number" id="ballNumber">
             ?
           </div>
 
@@ -864,84 +526,23 @@ body{
 
       </div>
 
-
-      <div
-        class="next-in"
-        id="nextIn"
-      >
-        Next call in 4s
+      <div class="next-call" id="nextCall">
+        NEXT CALL IN 1S
       </div>
 
-
-      <button
-        class="pause-btn"
-        id="pauseBtn"
-      >
-        Pause
-      </button>
-
-
-      <div
-        class="called-log"
-        id="calledLog"
-      >
-        No numbers called yet.
+      <div class="called" id="calledNumbers">
+        0 called
       </div>
 
     </div>
 
 
-    <!-- CARD -->
+    <!-- PLAYER CARDS -->
+    <div id="playerCards"></div>
 
-    <div>
-
-      <div class="card-wrap">
-
-        <div class="card-title">
-          B I N G O
-        </div>
-
-        <div
-          class="card-number"
-          id="cardNumberLabel"
-        >
-          Card #—
-        </div>
-
-        <div
-          class="grid"
-          id="grid"
-        ></div>
-
-        <div
-          class="status"
-          id="status"
-        >
-          Waiting for first call…
-        </div>
-
-        <div
-          class="win-banner"
-          id="winBanner"
-        >
-          BINGO!
-        </div>
-
-      </div>
-
-
-      <div style="text-align:center;">
-
-        <button
-          class="link-btn"
-          id="newCardBtn"
-        >
-          Back to rooms
-        </button>
-
-      </div>
-
-    </div>
+    <button class="back" onclick="backToRooms()">
+      BACK TO ROOMS
+    </button>
 
   </div>
 
@@ -950,1188 +551,900 @@ body{
 
 <script>
 
-(function(){
+const MAX_CARDS_PER_PLAYER = 4;
+const SELECT_TIME = 50;
+const CALL_SPEED = 1000;
 
-  /* =========================
-     BINGO SETTINGS
-  ========================= */
+/*
+  The final displayed prize uses:
+  20 ETB room  -> 17 ETB per card
+  40 ETB room  -> 37 ETB per card
 
-  const COLS = {
-    B:[1,15],
-    I:[16,30],
-    N:[31,45],
-    G:[46,60],
-    O:[61,75]
-  };
+  The deduction is intentionally not displayed in the interface.
+*/
 
-  const LETTERS = [
-    'B',
-    'I',
-    'N',
-    'G',
-    'O'
-  ];
+const ROOMS = {
+  20:{
+    name:"20 ETB PLAY",
+    entry:20,
+    perCardPrize:17
+  },
 
-  const SELECT_SECONDS = 50;
-
-  const CALL_INTERVAL_MS = 4000;
-
-
-  /* =========================
-     ONLY TWO ROOMS
-  ========================= */
-
-  const ROOMS = [
-
-    {
-      id:'r1',
-      name:'20 ETB PLAY',
-      entry:20
-    },
-
-    {
-      id:'r2',
-      name:'40 ETB PLAY',
-      entry:40
-    }
-
-  ];
-
-
-  /* =========================
-     GAME STATE
-  ========================= */
-
-  let currentRoom = null;
-
-  let roomPlayers = 0;
-
-  let lockedNumbers = new Set();
-
-  let myCardNumber = null;
-
-  let card = [];
-
-  let called = [];
-
-  let remaining = [];
-
-  let won = false;
-
-  let paused = false;
-
-  let selectTimer = null;
-
-  let callTimer = null;
-
-  let nextInTimer = null;
-
-  let msUntilNextCall = CALL_INTERVAL_MS;
-
-
-  /* =========================
-     DOM
-  ========================= */
-
-  const screenRooms =
-    document.getElementById('screenRooms');
-
-  const screenSelect =
-    document.getElementById('screenSelect');
-
-  const screenGame =
-    document.getElementById('screenGame');
-
-  const roomList =
-    document.getElementById('roomList');
-
-  const roomLabel =
-    document.getElementById('roomLabel');
-
-  const selectTimerEl =
-    document.getElementById('selectTimer');
-
-  const playerCountEl =
-    document.getElementById('playerCount');
-
-  const entryAmtEl =
-    document.getElementById('entryAmt');
-
-  const numGrid =
-    document.getElementById('numGrid');
-
-  const searchNum =
-    document.getElementById('searchNum');
-
-  const pickStatus =
-    document.getElementById('pickStatus');
-
-  const grid =
-    document.getElementById('grid');
-
-  const ball =
-    document.getElementById('ball');
-
-  const ballLetter =
-    document.getElementById('ballLetter');
-
-  const ballNum =
-    document.getElementById('ballNum');
-
-  const nextInEl =
-    document.getElementById('nextIn');
-
-  const pauseBtn =
-    document.getElementById('pauseBtn');
-
-  const calledLog =
-    document.getElementById('calledLog');
-
-  const statusEl =
-    document.getElementById('status');
-
-  const winBanner =
-    document.getElementById('winBanner');
-
-  const newCardBtn =
-    document.getElementById('newCardBtn');
-
-  const cardNumberLabel =
-    document.getElementById('cardNumberLabel');
-
-  const gameRoomLabel =
-    document.getElementById('gameRoomLabel');
-
-
-  /* =========================
-     SCREEN CONTROL
-  ========================= */
-
-  function showScreen(el){
-
-    [
-      screenRooms,
-      screenSelect,
-      screenGame
-    ].forEach(s =>
-      s.classList.remove('active')
-    );
-
-    el.classList.add('active');
+  40:{
+    name:"40 ETB PLAY",
+    entry:40,
+    perCardPrize:37
   }
+};
+
+let currentRoom = null;
+let selectedCards = [];
+let selectedCardNumbers = new Set();
+
+let calledNumbers = [];
+let remainingNumbers = [];
+
+let timerInterval = null;
+let callerInterval = null;
+
+let gameRunning = false;
+let gameOver = false;
 
 
-  /* =========================
-     RANDOM
-  ========================= */
+/* --------------------------------
+   DEMO ROOM STATE
+-------------------------------- */
 
-  function shuffle(arr){
+let roomState = {
+  20:{
+    players:0,
+    cards:0
+  },
 
-    for(
-      let i = arr.length - 1;
-      i > 0;
-      i--
-    ){
-
-      const j =
-        Math.floor(
-          Math.random() * (i + 1)
-        );
-
-      [
-        arr[i],
-        arr[j]
-      ] = [
-        arr[j],
-        arr[i]
-      ];
-
-    }
-
-    return arr;
+  40:{
+    players:0,
+    cards:0
   }
+};
 
 
-  function mulberry32(seed){
+/* --------------------------------
+   GET PRIZE
+-------------------------------- */
 
-    return function(){
+function getPrize(roomPrice,cards){
 
-      seed |= 0;
+  if(cards <= 0) return 0;
 
-      seed =
-        (seed + 0x6D2B79F5) | 0;
+  return cards * ROOMS[roomPrice].perCardPrize;
+}
 
-      let t =
-        Math.imul(
-          seed ^ (seed >>> 15),
-          1 | seed
-        );
 
-      t =
-        (t +
-          Math.imul(
-            t ^ (t >>> 7),
-            61 | t
-          )
-        ) ^ t;
+/* --------------------------------
+   UPDATE ROOM DISPLAY
+-------------------------------- */
 
-      return (
-        (t ^ (t >>> 14)) >>> 0
-      ) / 4294967296;
+function updateRooms(){
+
+  document.getElementById("room20Players").textContent =
+    roomState[20].players;
+
+  document.getElementById("room20Cards").textContent =
+    roomState[20].cards;
+
+  document.getElementById("room20Prize").textContent =
+    getPrize(20,roomState[20].cards) + " ETB";
+
+
+  document.getElementById("room40Players").textContent =
+    roomState[40].players;
+
+  document.getElementById("room40Cards").textContent =
+    roomState[40].cards;
+
+  document.getElementById("room40Prize").textContent =
+    getPrize(40,roomState[40].cards) + " ETB";
+}
+
+
+/* --------------------------------
+   OPEN ROOM
+-------------------------------- */
+
+function openRoom(price){
+
+  currentRoom = price;
+
+  selectedCards = [];
+  selectedCardNumbers.clear();
+
+  document.getElementById("roomsScreen")
+    .classList.remove("active");
+
+  document.getElementById("selectScreen")
+    .classList.add("active");
+
+  document.getElementById("selectRoom").textContent =
+    ROOMS[price].name;
+
+  renderCardPicker();
+
+  updateSelection();
+
+  startSelectionTimer();
+}
+
+
+/* --------------------------------
+   CARD PICKER
+-------------------------------- */
+
+function renderCardPicker(){
+
+  const grid = document.getElementById("cardGrid");
+
+  grid.innerHTML = "";
+
+  for(let n=1;n<=250;n++){
+
+    const button = document.createElement("button");
+
+    button.className = "card-choice";
+
+    button.textContent = n;
+
+    button.dataset.number = n;
+
+    button.onclick = function(){
+
+      selectCard(n,button);
 
     };
 
+    grid.appendChild(button);
+  }
+}
+
+
+/* --------------------------------
+   SELECT CARD
+-------------------------------- */
+
+function selectCard(number,button){
+
+  if(selectedCardNumbers.has(number)){
+
+    selectedCardNumbers.delete(number);
+
+    selectedCards =
+      selectedCards.filter(n => n !== number);
+
+    button.classList.remove("selected");
+
+    updateSelection();
+
+    return;
   }
 
 
-  function shuffleWith(arr,rng){
+  if(selectedCards.length >= MAX_CARDS_PER_PLAYER){
 
-    for(
-      let i=arr.length-1;
-      i>0;
-      i--
-    ){
+    document.getElementById("selectionMessage").textContent =
+      "Maximum 4 cards per player.";
 
-      const j =
-        Math.floor(
-          rng() * (i+1)
-        );
-
-      [
-        arr[i],
-        arr[j]
-      ] = [
-        arr[j],
-        arr[i]
-      ];
-
-    }
-
-    return arr;
+    return;
   }
 
 
-  function letterFor(num){
+  selectedCards.push(number);
 
-    for(
-      const l of LETTERS
-    ){
+  selectedCardNumbers.add(number);
 
-      if(
-        num >= COLS[l][0] &&
-        num <= COLS[l][1]
-      ){
+  button.classList.add("selected");
 
-        return l;
+  document.getElementById("selectionMessage").textContent =
+    "Card #" + number + " selected.";
+
+  updateSelection();
+}
+
+
+/* --------------------------------
+   UPDATE SELECTION
+-------------------------------- */
+
+function updateSelection(){
+
+  const count = selectedCards.length;
+
+  document.getElementById("selectedCount")
+    .textContent = count;
+
+
+  const startButton =
+    document.getElementById("startButton");
+
+
+  if(count > 0){
+
+    startButton.disabled = false;
+
+    startButton.textContent =
+      "START WITH " + count + " CARD" +
+      (count > 1 ? "S" : "");
+
+  }else{
+
+    startButton.disabled = true;
+
+    startButton.textContent =
+      "SELECT A CARD";
+
+  }
+
+
+  const simulatedCards =
+    roomState[currentRoom].cards + count;
+
+  const simulatedPlayers =
+    roomState[currentRoom].players + 1;
+
+
+  document.getElementById("selectPlayers")
+    .textContent = simulatedPlayers;
+
+  document.getElementById("selectCards")
+    .textContent = simulatedCards;
+
+  document.getElementById("selectPrize")
+    .textContent =
+      getPrize(currentRoom,simulatedCards) + " ETB";
+}
+
+
+/* --------------------------------
+   50 SECOND COUNTDOWN
+-------------------------------- */
+
+function startSelectionTimer(){
+
+  clearInterval(timerInterval);
+
+  let seconds = SELECT_TIME;
+
+  document.getElementById("timer").textContent =
+    seconds;
+
+
+  timerInterval = setInterval(()=>{
+
+    seconds--;
+
+    document.getElementById("timer").textContent =
+      seconds;
+
+
+    if(seconds <= 0){
+
+      clearInterval(timerInterval);
+
+      if(selectedCards.length > 0){
+
+        startGame();
+
+      }else{
+
+        backToRooms();
 
       }
 
     }
 
-    return '';
+  },1000);
+}
+
+
+/* --------------------------------
+   START GAME
+-------------------------------- */
+
+function startGame(){
+
+  if(selectedCards.length === 0) return;
+
+  clearInterval(timerInterval);
+
+  /*
+    In a real multiplayer version these values
+    must come from the server/database.
+  */
+
+  roomState[currentRoom].players += 1;
+
+  roomState[currentRoom].cards += selectedCards.length;
+
+
+  document.getElementById("gameRoom").textContent =
+    ROOMS[currentRoom].name;
+
+  document.getElementById("gamePlayers").textContent =
+    roomState[currentRoom].players;
+
+  document.getElementById("gameCards").textContent =
+    roomState[currentRoom].cards;
+
+  document.getElementById("gamePrize").textContent =
+    getPrize(
+      currentRoom,
+      roomState[currentRoom].cards
+    ) + " ETB";
+
+
+  document.getElementById("selectScreen")
+    .classList.remove("active");
+
+  document.getElementById("gameScreen")
+    .classList.add("active");
+
+
+  createPlayerCards();
+
+  startCaller();
+
+  updateRooms();
+}
+
+
+/* --------------------------------
+   CREATE PLAYER CARDS
+-------------------------------- */
+
+function createPlayerCards(){
+
+  const container =
+    document.getElementById("playerCards");
+
+  container.innerHTML = "";
+
+  selectedCards.forEach((cardNumber,index)=>{
+
+    const cardBox =
+      document.createElement("div");
+
+    cardBox.className = "bingo-card";
+
+    cardBox.style.marginBottom = "20px";
+
+
+    const title =
+      document.createElement("div");
+
+    title.style.textAlign = "center";
+    title.style.color = "#777f91";
+    title.style.marginBottom = "10px";
+
+    title.textContent =
+      "CARD #" + cardNumber;
+
+
+    cardBox.appendChild(title);
+
+
+    const header =
+      document.createElement("div");
+
+    header.className =
+      "bingo-header";
+
+
+    ["B","I","N","G","O"].forEach(letter=>{
+
+      const h =
+        document.createElement("div");
+
+      h.textContent = letter;
+
+      header.appendChild(h);
+
+    });
+
+
+    cardBox.appendChild(header);
+
+
+    const grid =
+      document.createElement("div");
+
+    grid.className = "bingo-grid";
+
+    const card =
+      generateBingoCard(cardNumber);
+
+
+    for(let row=0;row<5;row++){
+
+      for(let col=0;col<5;col++){
+
+        const cell =
+          document.createElement("div");
+
+        cell.className = "cell";
+
+
+        if(row===2 && col===2){
+
+          cell.classList.add("free");
+
+          cell.textContent = "FREE";
+
+        }else{
+
+          cell.textContent =
+            card[row][col];
+
+        }
+
+
+        cell.dataset.number =
+          card[row][col] || "";
+
+
+        grid.appendChild(cell);
+
+      }
+
+    }
+
+
+    cardBox.appendChild(grid);
+
+
+    const status =
+      document.createElement("div");
+
+    status.className =
+      "selection-info";
+
+    status.id =
+      "cardStatus_" + index;
+
+    status.textContent =
+      "Waiting for numbers...";
+
+
+    cardBox.appendChild(status);
+
+
+    container.appendChild(cardBox);
+
+  });
+
+}
+
+
+/* --------------------------------
+   BINGO CARD GENERATOR
+-------------------------------- */
+
+function generateBingoCard(seed){
+
+  const columns = [
+    range(1,15),
+    range(16,30),
+    range(31,45),
+    range(46,60),
+    range(61,75)
+  ];
+
+  const result =
+    Array.from(
+      {length:5},
+      ()=>Array(5).fill(null)
+    );
+
+
+  for(let col=0;col<5;col++){
+
+    const numbers =
+      shuffle([...columns[col]]).slice(0,5);
+
+
+    for(let row=0;row<5;row++){
+
+      if(row===2 && col===2){
+
+        result[row][col] = null;
+
+      }else{
+
+        result[row][col] =
+          numbers[row];
+
+      }
+
+    }
 
   }
 
 
-  /* =========================
-     ROOMS
-  ========================= */
+  return result;
+}
 
-  function renderRooms(){
 
-    roomList.innerHTML = '';
+function range(start,end){
 
-    ROOMS.forEach(room => {
+  const result=[];
 
-      const div =
-        document.createElement('div');
+  for(let n=start;n<=end;n++){
 
-      div.className =
-        'room-card';
+    result.push(n);
 
-      div.innerHTML = `
+  }
 
-        <div>
+  return result;
+}
 
-          <div class="room-name">
-            ${room.name}
-          </div>
 
-          <div class="room-meta">
-            Unlimited players
-          </div>
+function shuffle(array){
 
-        </div>
+  for(let i=array.length-1;i>0;i--){
 
-        <div class="room-price">
+    const j =
+      Math.floor(Math.random()*(i+1));
 
-          <div class="amount">
-            ${room.entry} ETB
-          </div>
+    [array[i],array[j]] =
+      [array[j],array[i]];
 
-          <div class="label">
-            PLAY
-          </div>
+  }
 
-        </div>
+  return array;
+}
 
-      `;
 
-      div.addEventListener(
-        'click',
-        () => joinRoom(room)
-      );
+/* --------------------------------
+   AUTOMATIC CALLER
+-------------------------------- */
 
-      roomList.appendChild(div);
+function startCaller(){
 
+  clearInterval(callerInterval);
+
+  calledNumbers = [];
+
+  remainingNumbers =
+    shuffle(
+      range(1,75)
+    );
+
+  gameRunning = true;
+  gameOver = false;
+
+
+  callNumber();
+
+
+  callerInterval =
+    setInterval(()=>{
+
+      if(!gameRunning || gameOver)
+        return;
+
+      callNumber();
+
+    },CALL_SPEED);
+
+}
+
+
+/* --------------------------------
+   CALL NUMBER
+-------------------------------- */
+
+function callNumber(){
+
+  if(remainingNumbers.length === 0){
+
+    stopCaller();
+
+    return;
+  }
+
+
+  const number =
+    remainingNumbers.shift();
+
+
+  calledNumbers.push(number);
+
+
+  const letter =
+    getLetter(number);
+
+
+  document.getElementById("ballLetter")
+    .textContent = letter;
+
+  document.getElementById("ballNumber")
+    .textContent = number;
+
+
+  document.getElementById("calledNumbers")
+    .textContent =
+      calledNumbers.length +
+      " called";
+
+
+  document.getElementById("nextCall")
+    .textContent =
+      "NEXT CALL IN 1S";
+
+
+  markNumber(number);
+
+}
+
+
+/* --------------------------------
+   BINGO LETTER
+-------------------------------- */
+
+function getLetter(number){
+
+  if(number <= 15) return "B";
+
+  if(number <= 30) return "I";
+
+  if(number <= 45) return "N";
+
+  if(number <= 60) return "G";
+
+  return "O";
+}
+
+
+/* --------------------------------
+   MARK PLAYER CARDS
+-------------------------------- */
+
+function markNumber(number){
+
+  const cards =
+    document.querySelectorAll(".bingo-card");
+
+
+  cards.forEach((cardBox,index)=>{
+
+    const cells =
+      cardBox.querySelectorAll(".cell");
+
+
+    cells.forEach(cell=>{
+
+      if(Number(cell.dataset.number) === number){
+
+        cell.classList.add("marked");
+
+      }
+
+    });
+
+
+    checkBingo(cardBox,index);
+
+  });
+
+}
+
+
+/* --------------------------------
+   CHECK BINGO
+-------------------------------- */
+
+function checkBingo(cardBox,index){
+
+  const cells =
+    cardBox.querySelectorAll(".cell");
+
+
+  function marked(row,col){
+
+    return cells[row*5+col]
+      .classList.contains("marked")
+      ||
+      cells[row*5+col]
+      .classList.contains("free");
+  }
+
+
+  for(let row=0;row<5;row++){
+
+    let win=true;
+
+    for(let col=0;col<5;col++){
+
+      if(!marked(row,col)){
+
+        win=false;
+        break;
+
+      }
+
+    }
+
+    if(win){
+
+      playerWon(cardBox,index);
+      return;
+
+    }
+
+  }
+
+
+  for(let col=0;col<5;col++){
+
+    let win=true;
+
+    for(let row=0;row<5;row++){
+
+      if(!marked(row,col)){
+
+        win=false;
+        break;
+
+      }
+
+    }
+
+    if(win){
+
+      playerWon(cardBox,index);
+      return;
+
+    }
+
+  }
+
+
+  let diagonal1=true;
+  let diagonal2=true;
+
+
+  for(let i=0;i<5;i++){
+
+    if(!marked(i,i))
+      diagonal1=false;
+
+    if(!marked(i,4-i))
+      diagonal2=false;
+
+  }
+
+
+  if(diagonal1 || diagonal2){
+
+    playerWon(cardBox,index);
+
+  }
+
+}
+
+
+/* --------------------------------
+   WIN
+-------------------------------- */
+
+function playerWon(cardBox,index){
+
+  if(gameOver) return;
+
+  gameOver=true;
+
+  stopCaller();
+
+
+  const win =
+    document.createElement("div");
+
+  win.className="win";
+
+  win.textContent="BINGO!";
+
+
+  const prize =
+    document.createElement("div");
+
+  prize.className="prize";
+
+  prize.textContent =
+    "PRIZE: " +
+    getPrize(
+      currentRoom,
+      roomState[currentRoom].cards
+    ) +
+    " ETB";
+
+
+  cardBox.appendChild(win);
+
+  cardBox.appendChild(prize);
+
+}
+
+
+/* --------------------------------
+   STOP CALLER
+-------------------------------- */
+
+function stopCaller(){
+
+  clearInterval(callerInterval);
+
+  gameRunning=false;
+
+}
+
+
+/* --------------------------------
+   BACK TO ROOMS
+-------------------------------- */
+
+function backToRooms(){
+
+  clearInterval(timerInterval);
+
+  stopCaller();
+
+  document.getElementById("gameScreen")
+    .classList.remove("active");
+
+  document.getElementById("selectScreen")
+    .classList.remove("active");
+
+  document.getElementById("roomsScreen")
+    .classList.add("active");
+
+  updateRooms();
+
+}
+
+
+/* --------------------------------
+   CARD SEARCH
+-------------------------------- */
+
+document.getElementById("search")
+.addEventListener("input",function(){
+
+  const number =
+    Number(this.value);
+
+
+  if(number < 1 || number > 250)
+    return;
+
+
+  const button =
+    document.querySelector(
+      '.card-choice[data-number="' +
+      number +
+      '"]'
+    );
+
+
+  if(button){
+
+    button.scrollIntoView({
+      behavior:"smooth",
+      block:"center"
     });
 
   }
 
+});
 
-  /* =========================
-     JOIN ROOM
-  ========================= */
 
-  function joinRoom(room){
-
-    currentRoom = room;
-
-    roomPlayers = 1;
-
-    lockedNumbers =
-      new Set();
-
-    myCardNumber = null;
-
-    card = [];
-
-    roomLabel.textContent =
-      room.name;
-
-    entryAmtEl.textContent =
-      room.entry + ' ETB';
-
-    playerCountEl.textContent =
-      'Unlimited';
-
-    buildPicker();
-
-    showScreen(screenSelect);
-
-    startSelectPhase();
-
-  }
-
-
-  /* =========================
-     BINGO CARD
-  ========================= */
-
-  function buildCardFor(number){
-
-    const rng =
-      mulberry32(
-        number * 2654435761
-      );
-
-    const result = [];
-
-    for(
-      let col=0;
-      col<5;
-      col++
-    ){
-
-      const [lo,hi] =
-        COLS[LETTERS[col]];
-
-      const pool = [];
-
-      for(
-        let n=lo;
-        n<=hi;
-        n++
-      ){
-
-        pool.push(n);
-
-      }
-
-      shuffleWith(pool,rng);
-
-      const picks =
-        pool.slice(0,5);
-
-      for(
-        let row=0;
-        row<5;
-        row++
-      ){
-
-        if(!result[row])
-          result[row]=[];
-
-        const isFree =
-          row===2 && col===2;
-
-        result[row][col] = {
-
-          num:
-            isFree
-              ? null
-              : picks[row],
-
-          marked:isFree,
-
-          free:isFree
-
-        };
-
-      }
-
-    }
-
-    return result;
-
-  }
-
-
-  /* =========================
-     CARD PICKER
-  ========================= */
-
-  function buildPicker(){
-
-    numGrid.innerHTML='';
-
-    for(
-      let n=1;
-      n<=250;
-      n++
-    ){
-
-      const btn =
-        document.createElement('button');
-
-      btn.className =
-        'num-btn';
-
-      btn.textContent=n;
-
-      btn.dataset.num=n;
-
-      btn.addEventListener(
-        'click',
-        () => pickNumber(n,btn)
-      );
-
-      numGrid.appendChild(btn);
-
-    }
-
-  }
-
-
-  searchNum.addEventListener(
-    'input',
-    () => {
-
-      const val =
-        parseInt(
-          searchNum.value,
-          10
-        );
-
-      if(
-        val>=1 &&
-        val<=250
-      ){
-
-        const btn =
-          numGrid.children[val-1];
-
-        if(btn){
-
-          btn.scrollIntoView({
-            block:'center',
-            behavior:'smooth'
-          });
-
-        }
-
-      }
-
-    }
-  );
-
-
-  function pickNumber(n,btn){
-
-    if(
-      lockedNumbers.has(n)
-    ){
-
-      return;
-
-    }
-
-
-    if(
-      myCardNumber !== null
-    ){
-
-      const previous =
-        numGrid.children[
-          myCardNumber - 1
-        ];
-
-      if(previous){
-
-        previous.classList.remove(
-          'selected'
-        );
-
-      }
-
-      lockedNumbers.delete(
-        myCardNumber
-      );
-
-    }
-
-
-    myCardNumber=n;
-
-    lockedNumbers.add(n);
-
-    btn.classList.add(
-      'selected'
-    );
-
-    card =
-      buildCardFor(n);
-
-    pickStatus.textContent =
-      'Card #' +
-      n +
-      ' selected.';
-
-  }
-
-
-  /* =========================
-     50 SECOND COUNTDOWN
-  ========================= */
-
-  function startSelectPhase(){
-
-    clearInterval(selectTimer);
-
-    let secondsLeft =
-      SELECT_SECONDS;
-
-    selectTimerEl.textContent =
-      secondsLeft;
-
-
-    selectTimer =
-      setInterval(() => {
-
-        secondsLeft--;
-
-        selectTimerEl.textContent =
-          Math.max(
-            secondsLeft,
-            0
-          );
-
-
-        if(
-          secondsLeft<=0
-        ){
-
-          clearInterval(
-            selectTimer
-          );
-
-          finalizeCardAndStart();
-
-        }
-
-      },1000);
-
-  }
-
-
-  function finalizeCardAndStart(){
-
-    if(
-      myCardNumber===null
-    ){
-
-      const available=[];
-
-      for(
-        let n=1;
-        n<=250;
-        n++
-      ){
-
-        if(
-          !lockedNumbers.has(n)
-        ){
-
-          available.push(n);
-
-        }
-
-      }
-
-
-      const pick =
-        available.length
-          ? available[
-              Math.floor(
-                Math.random() *
-                available.length
-              )
-            ]
-          : Math.floor(
-              Math.random()*250
-            )+1;
-
-
-      myCardNumber=pick;
-
-      card =
-        buildCardFor(pick);
-
-    }
-
-
-    startGame();
-
-  }
-
-
-  /* =========================
-     GAME
-  ========================= */
-
-  function renderCard(){
-
-    grid.innerHTML='';
-
-
-    for(
-      let row=0;
-      row<5;
-      row++
-    ){
-
-      for(
-        let col=0;
-        col<5;
-        col++
-      ){
-
-        const data =
-          card[row][col];
-
-        const div =
-          document.createElement('div');
-
-        div.className =
-          'cell' +
-
-          (
-            data.free
-              ? ' free'
-              : ''
-          ) +
-
-          (
-            data.marked
-              ? ' marked'
-              : ''
-          );
-
-
-        const span =
-          document.createElement('span');
-
-        span.textContent =
-          data.free
-            ? 'FREE'
-            : data.num;
-
-        div.appendChild(span);
-
-        grid.appendChild(div);
-
-      }
-
-    }
-
-  }
-
-
-  function updateCalledLog(){
-
-    if(
-      called.length===0
-    ){
-
-      calledLog.textContent =
-        'No numbers called yet.';
-
-      return;
-
-    }
-
-
-    const recent =
-      called
-        .slice(-8)
-        .map(
-          n =>
-            letterFor(n)+n
-        )
-        .join('   ');
-
-
-    calledLog.textContent =
-      called.length +
-      ' called  |  ' +
-      recent;
-
-  }
-
-
-  function startGame(){
-
-    won=false;
-
-    paused=false;
-
-    called=[];
-
-    remaining =
-      shuffle(
-        Array.from(
-          {length:75},
-          (_,i)=>i+1
-        )
-      );
-
-
-    winBanner.classList.remove(
-      'show'
-    );
-
-
-    pauseBtn.textContent =
-      'Pause';
-
-
-    cardNumberLabel.textContent =
-      'Card #' +
-      myCardNumber;
-
-
-    gameRoomLabel.textContent =
-      currentRoom.name;
-
-
-    renderCard();
-
-    updateCalledLog();
-
-
-    statusEl.textContent =
-      'Calling first number…';
-
-
-    showScreen(screenGame);
-
-
-    msUntilNextCall=1200;
-
-    scheduleNextCall();
-
-  }
-
-
-  /* =========================
-     AUTOMATIC CALLER
-  ========================= */
-
-  function scheduleNextCall(){
-
-    clearTimeout(callTimer);
-
-    clearInterval(nextInTimer);
-
-
-    if(
-      won ||
-      paused ||
-      remaining.length===0
-    ){
-
-      return;
-
-    }
-
-
-    let secsLeft =
-      Math.ceil(
-        msUntilNextCall/1000
-      );
-
-
-    nextInEl.textContent =
-      'Next call in ' +
-      secsLeft +
-      's';
-
-
-    nextInTimer =
-      setInterval(() => {
-
-        secsLeft--;
-
-        if(
-          secsLeft>0
-        ){
-
-          nextInEl.textContent =
-            'Next call in ' +
-            secsLeft +
-            's';
-
-        }
-
-      },1000);
-
-
-    callTimer =
-      setTimeout(() => {
-
-        clearInterval(
-          nextInTimer
-        );
-
-        callNext();
-
-        msUntilNextCall =
-          CALL_INTERVAL_MS;
-
-        scheduleNextCall();
-
-      },msUntilNextCall);
-
-  }
-
-
-  function callNext(){
-
-    if(
-      won ||
-      remaining.length===0
-    ){
-
-      return;
-
-    }
-
-
-    const num =
-      remaining.pop();
-
-    called.push(num);
-
-
-    const letter =
-      letterFor(num);
-
-
-    ball.classList.remove(
-      'pop'
-    );
-
-    void ball.offsetWidth;
-
-
-    ballLetter.textContent =
-      letter;
-
-    ballNum.textContent =
-      num;
-
-
-    ball.classList.add(
-      'pop'
-    );
-
-
-    for(
-      let row=0;
-      row<5;
-      row++
-    ){
-
-      for(
-        let col=0;
-        col<5;
-        col++
-      ){
-
-        if(
-          card[row][col].num===num
-        ){
-
-          card[row][col].marked=true;
-
-        }
-
-      }
-
-    }
-
-
-    renderCard();
-
-    updateCalledLog();
-
-
-    statusEl.textContent =
-      (75-remaining.length) +
-      ' of 75 called';
-
-
-    checkWin();
-
-
-    if(
-      remaining.length===0
-    ){
-
-      nextInEl.textContent =
-        'All numbers called';
-
-    }
-
-  }
-
-
-  /* =========================
-     WIN CHECK
-  ========================= */
-
-  function checkWin(){
-
-    const lines=[];
-
-
-    for(
-      let r=0;
-      r<5;
-      r++
-    ){
-
-      lines.push([
-        [r,0],
-        [r,1],
-        [r,2],
-        [r,3],
-        [r,4]
-      ]);
-
-    }
-
-
-    for(
-      let c=0;
-      c<5;
-      c++
-    ){
-
-      lines.push([
-        [0,c],
-        [1,c],
-        [2,c],
-        [3,c],
-        [4,c]
-      ]);
-
-    }
-
-
-    lines.push([
-      [0,0],
-      [1,1],
-      [2,2],
-      [3,3],
-      [4,4]
-    ]);
-
-
-    lines.push([
-      [0,4],
-      [1,3],
-      [2,2],
-      [3,1],
-      [4,0]
-    ]);
-
-
-    for(
-      const line of lines
-    ){
-
-      if(
-        line.every(
-          ([r,c]) =>
-            card[r][c].marked
-        )
-      ){
-
-        declareWin(line);
-
-        return;
-
-      }
-
-    }
-
-  }
-
-
-  function declareWin(line){
-
-    won=true;
-
-
-    clearTimeout(callTimer);
-
-    clearInterval(nextInTimer);
-
-
-    nextInEl.textContent =
-      'Game over';
-
-
-    winBanner.classList.add(
-      'show'
-    );
-
-
-    statusEl.textContent =
-      'BINGO! ' +
-      called.length +
-      ' numbers called.';
-
-
-    line.forEach(
-      ([r,c]) => {
-
-        const cell =
-          grid.children[
-            r*5+c
-          ];
-
-        if(cell){
-
-          cell.classList.add(
-            'win-cell'
-          );
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /* =========================
-     PAUSE
-  ========================= */
-
-  pauseBtn.addEventListener(
-    'click',
-    () => {
-
-      if(won)
-        return;
-
-
-      paused=!paused;
-
-
-      if(paused){
-
-        pauseBtn.textContent =
-          'Resume';
-
-        clearTimeout(
-          callTimer
-        );
-
-        clearInterval(
-          nextInTimer
-        );
-
-        nextInEl.textContent =
-          'Paused';
-
-      }else{
-
-        pauseBtn.textContent =
-          'Pause';
-
-        msUntilNextCall =
-          CALL_INTERVAL_MS;
-
-        scheduleNextCall();
-
-      }
-
-    }
-  );
-
-
-  /* =========================
-     BACK TO ROOMS
-  ========================= */
-
-  newCardBtn.addEventListener(
-    'click',
-    () => {
-
-      clearTimeout(callTimer);
-
-      clearInterval(nextInTimer);
-
-      clearInterval(selectTimer);
-
-      renderRooms();
-
-      showScreen(screenRooms);
-
-    }
-  );
-
-
-  /* =========================
-     START
-  ========================= */
-
-  renderRooms();
-
-})();
+updateRooms();
 
 </script>
 
