@@ -1,81 +1,216 @@
-// server.js (Node.js backend snippet)
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hulu Bingo Interface</title>
+    <style>
+        :root {
+            --bg-main: #0a0d14;
+            --bg-card: #121722;
+            --bg-secondary: #181f2d;
+            --accent-gold: #f5b000;
+            --accent-green: #00e676;
+            --text-white: #ffffff;
+            --text-dim: #7f8a9d;
+            --border-color: #232c3d;
+        }
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-white); display: flex; justify-content: center; }
 
-let gameState = {
-    prizePool: 0,
-    timer: 50,
-    drawnBalls: [],
-    inProgress: false,
-    players: {}
-};
+        .app-view { width: 100%; max-width: 420px; height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; background: var(--bg-main); }
 
-// Game Loop: Pre-game countdown & Ball drawing
-setInterval(() => {
-    if (!gameState.inProgress) {
-        if (gameState.timer > 0) {
-            gameState.timer--;
-            io.emit('timerUpdate', gameState.timer);
+        /* Top Bar */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--bg-main); }
+        .user-balance { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .avatar { width: 28px; height: 28px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .balance-text { font-size: 0.75rem; color: var(--text-dim); }
+        .balance-val { font-size: 0.85rem; font-weight: bold; color: var(--accent-gold); }
+        .logo-img { font-weight: 900; font-size: 1.2rem; font-style: italic; color: var(--accent-gold); }
+
+        /* Banner Card */
+        .banner-box { margin: 10px 16px; padding: 14px; background: linear-gradient(180deg, #182030 0%, #0f1420 100%); border-radius: 14px; border: 1px solid var(--accent-gold); display: flex; justify-content: space-between; align-items: center; }
+        .pool-title { font-size: 0.7rem; color: var(--accent-gold); font-weight: bold; }
+        .pool-amount { font-size: 1.5rem; font-weight: 900; color: var(--text-white); }
+        .timer-box { text-align: right; }
+        .timer-label { font-size: 0.65rem; color: var(--text-dim); }
+        .timer-count { font-size: 1.4rem; font-weight: 900; color: var(--text-white); }
+
+        /* Ticket Selection Grid (1-100) */
+        .selection-container { flex: 1; padding: 0 16px; overflow-y: auto; }
+        .selection-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
+        .grid-100 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding-bottom: 120px; }
+        .num-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-dim); border-radius: 6px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+        .num-btn.active { background: var(--accent-gold); color: #000; font-weight: bold; border-color: var(--accent-gold); }
+        .num-btn.taken { background: #181d28; color: #353e50; border-color: transparent; }
+
+        /* Bottom Selected Sheet */
+        .bottom-sheet { position: absolute; bottom: 50px; left: 0; right: 0; background: var(--bg-card); border-top-left-radius: 16px; border-top-right-radius: 16px; border-top: 2px solid var(--accent-gold); padding: 12px 16px; }
+        .sheet-handle { width: 40px; height: 4px; background: var(--accent-gold); border-radius: 2px; margin: 0 auto 10px auto; }
+        .selected-cards-preview { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 8px; }
+        .mini-card { background: #fff; color: #000; border-radius: 6px; padding: 4px; width: 110px; flex-shrink: 0; }
+        .mini-card-header { background: #ff0000; color: #fff; font-size: 0.6rem; font-weight: bold; text-align: center; border-radius: 3px; display: grid; grid-template-columns: repeat(5, 1fr); }
+        .mini-card-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; font-size: 0.55rem; text-align: center; margin-top: 2px; }
+
+        /* Fixed Bottom Action Bar */
+        .action-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 55px; background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; }
+        .total-bet { display: flex; flex-direction: column; }
+        .total-bet-label { font-size: 0.65rem; color: var(--text-dim); }
+        .total-bet-value { font-size: 1.1rem; font-weight: bold; color: var(--text-white); }
+        .live-tag { color: var(--accent-green); font-size: 0.7rem; display: flex; align-items: center; gap: 4px; }
+        .live-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; }
+
+        /* View Toggle Button */
+        .toggle-btn { position: absolute; top: 10px; right: 10px; background: var(--accent-gold); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; border: none; font-weight: bold; cursor: pointer; z-index: 100; }
+
+        /* Screen 2: Gameplay Slots */
+        .game-screen { display: none; flex-direction: column; width: 100%; height: 100%; background: var(--bg-main); }
+        .game-header { background: var(--bg-card); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .call-display { display: flex; align-items: center; gap: 8px; margin: 10px 16px; }
+        .current-ball { width: 44px; height: 44px; border-radius: 50%; background: #ffffff; color: #000; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 3px solid #b8c4d0; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .ball-history { display: flex; gap: 6px; background: var(--bg-card); padding: 6px 10px; border-radius: 20px; flex: 1; border: 1px solid var(--border-color); }
+        .mini-ball { width: 24px; height: 24px; border-radius: 50%; background: #232c3d; color: var(--accent-gold); font-size: 0.65rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+
+        .slots-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 0 16px; flex: 1; margin-bottom: 70px; }
+        .slot-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+        .card-table { width: 100%; height: 100%; border-collapse: collapse; font-size: 0.7rem; text-align: center; }
+        .card-table th { background: var(--accent-gold); color: #000; padding: 2px; font-weight: bold; }
+        .card-table td { border: 1px solid #232c3d; color: #fff; font-weight: 600; width: 20%; }
+        .card-table td.marked { background: var(--accent-green); color: #000; border-radius: 50%; }
+
+        .bingo-btn { position: absolute; bottom: 10px; right: 16px; left: 16px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-dim); padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 1rem; }
+        .bingo-btn.active { background: var(--accent-green); color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="app-view">
+    <button class="toggle-btn" onclick="toggleScreens()">Switch Screen Mode</button>
+
+    <!-- SCREEN 1: LOBBY & TICKET SELECTION -->
+    <div id="screen-lobby" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="top-nav">
+            <div class="user-balance">
+                <div class="avatar">P</div>
+                <div>
+                    <div class="balance-text">ዋና ሂሳብ</div>
+                    <div class="balance-val">5.00</div>
+                </div>
+            </div>
+            <div class="logo-img">ሁሉቢንጎ</div>
+        </div>
+
+        <div class="banner-box">
+            <div>
+                <div class="pool-title">ደራሽ</div>
+                <div class="pool-amount">1024 ETB</div>
+            </div>
+            <div class="timer-box">
+                <div class="timer-label">ጨዋታው ሊጀምር ነው</div>
+                <div class="timer-count">00:17</div>
+            </div>
+        </div>
+
+        <div class="selection-container">
+            <div class="selection-header">
+                <span>ካርቴላ ይምረጡ (10 ብር)</span>
+                <span style="color: var(--accent-gold)">1 <span style="color:var(--text-dim)">/ 4</span></span>
+            </div>
+            <div class="grid-100" id="ticket-grid"></div>
+        </div>
+
+        <div class="bottom-sheet">
+            <div class="sheet-handle"></div>
+            <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">የመረጡት ካርቴላዎች</div>
+            <div class="selected-cards-preview">
+                <div class="mini-card">
+                    <div class="mini-card-header"><span>B</span><span>I</span><span>N</span><span>G</span><span>O</span></div>
+                    <div class="mini-card-grid">
+                        <span>2</span><span>28</span><span>31</span><span>51</span><span>75</span>
+                        <span>13</span><span>21</span><span>43</span><span>53</span><span>74</span>
+                        <span>10</span><span>25</span><span>★</span><span>57</span><span>68</span>
+                        <span>4</span><span>30</span><span>34</span><span>49</span><span>71</span>
+                        <span>5</span><span>23</span><span>41</span><span>46</span><span>69</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <div class="total-bet">
+                <span class="total-bet-label">አጠቃላይ የመደቡት</span>
+                <span class="total-bet-value">10 ETB</span>
+            </div>
+            <div class="live-tag"><div class="live-dot"></div> LIVE</div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: ACTIVE GAMEPLAY SLOTS -->
+    <div id="screen-game" class="game-screen">
+        <div class="game-header">
+            <div style="font-size: 0.8rem; font-weight: bold;">GAME ROUND #198086</div>
+        </div>
+
+        <div class="call-display">
+            <div class="current-ball">4</div>
+            <div class="ball-history">
+                <div class="mini-ball">B4</div>
+                <div class="mini-ball">I29</div>
+                <div class="mini-ball">B12</div>
+                <div class="mini-ball">B5</div>
+            </div>
+        </div>
+
+        <div class="slots-grid">
+            <div class="slot-box">
+                <table class="card-table">
+                    <thead><tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr></thead>
+                    <tbody>
+                        <tr><td>2</td><td>28</td><td>31</td><td>51</td><td>75</td></tr>
+                        <tr><td>13</td><td>21</td><td>43</td><td>53</td><td>74</td></tr>
+                        <tr><td>10</td><td>25</td><td class="marked">★</td><td>57</td><td>68</td></tr>
+                        <tr><td class="marked">4</td><td>30</td><td>34</td><td>49</td><td>71</td></tr>
+                        <tr><td class="marked">5</td><td>23</td><td>41</td><td>46</td><td>69</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="slot-box" style="align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem;">SLOT 2</div>
+            <div class="slot-box" style="align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem;">SLOT 3</div>
+            <div class="slot-box" style="align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem;">SLOT 4</div>
+        </div>
+
+        <div class="bingo-btn">BINGO!</div>
+    </div>
+</div>
+
+<script>
+    // Generate 1-100 grid items
+    const gridContainer = document.getElementById('ticket-grid');
+    for (let i = 1; i <= 100; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'num-btn';
+        if ([4, 6, 7, 8, 9, 13, 14, 15, 16, 22, 42, 43, 44, 59, 60, 62, 64, 67, 68, 72, 73, 74, 80, 81, 84, 88, 90, 92, 97, 99].includes(i)) {
+            btn.classList.add('taken');
+        } else if (i === 97) {
+            btn.classList.add('active');
+        }
+        btn.innerText = i;
+        gridContainer.appendChild(btn);
+    }
+
+    // Toggle between Screen Mode 1 (Lobby) and Screen Mode 2 (Active Game)
+    function toggleScreens() {
+        const lobby = document.getElementById('screen-lobby');
+        const game = document.getElementById('screen-game');
+        if (lobby.style.display === 'none') {
+            lobby.style.display = 'flex';
+            game.style.display = 'none';
         } else {
-            gameState.inProgress = true;
-            gameState.timer = 0;
-            io.emit('gameStarted');
-            startBallDrawing();
+            lobby.style.display = 'none';
+            game.style.display = 'flex';
         }
     }
-}, 1000);
-
-function startBallDrawing() {
-    let interval = setInterval(() => {
-        if (gameState.drawnBalls.length < 75 && gameState.inProgress) {
-            let nextBall;
-            do {
-                nextBall = Math.floor(Math.random() * 75) + 1;
-            } while (gameState.drawnBalls.includes(nextBall));
-
-            gameState.drawnBalls.push(nextBall);
-            io.emit('newBall', nextBall);
-        } else {
-            clearInterval(interval);
-        }
-    }, 2000);
-}
-
-io.on('connection', (socket) => {
-    socket.emit('syncState', gameState);
-
-    socket.on('buyTicket', (data) => {
-        if (!gameState.inProgress) {
-            gameState.prizePool += data.ticketPrice * 0.8; // 80% to pool, 20% house fee
-            io.emit('prizePoolUpdate', gameState.prizePool);
-        }
-    });
-
-    socket.on('claimBingo', (ticketData) => {
-        // Validate ticket on server side against gameState.drawnBalls
-        const isValidWin = validateTicket(ticketData, gameState.drawnBalls);
-        if (isValidWin && gameState.inProgress) {
-            gameState.inProgress = false;
-            io.emit('gameOver', { winner: socket.id, prize: gameState.prizePool });
-            // Reset for next round
-            setTimeout(resetGame, 5000);
-        }
-    });
-});
-
-function validateTicket(ticket, drawn) {
-    // Server-side verification logic for 5x5 grid patterns
-    return true; 
-}
-
-function resetGame() {
-    gameState = { prizePool: 0, timer: 50, drawnBalls: [], inProgress: false, players: {} };
-    io.emit('syncState', gameState);
-}
-
-server.listen(3000, () => console.log('Bingo server running on port 3000'));
+</script>
+</body>
+</html>
