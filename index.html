@@ -2,1298 +2,1565 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lucky Bingo</title>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
 
-  :root{
-    --felt: #163a2f;
-    --felt-dark: #0f2a22;
-    --card: #f3e8ce;
-    --card-line: #d8c69f;
-    --brass: #c9a227;
-    --brass-light: #e6c14f;
-    --dauber: #b23a2e;
-    --ink: #1d2b2a;
-    --cream-text: #f3e8ce;
-    --locked: #8a8478;
-  }
+:root{
+  --bg:#071a2e;
+  --bg2:#102b4d;
+  --panel:#f5f6fa;
+  --text:#182235;
+  --muted:#8f99ad;
+  --blue:#5867e8;
+  --cyan:#28d6b0;
+  --white:#ffffff;
+}
 
-  *{box-sizing:border-box;}
+*{box-sizing:border-box}
 
-  body{
-    margin:0;
-    min-height:100vh;
-    background:
-      radial-gradient(ellipse at top, rgba(255,255,255,0.05), transparent 60%),
-      repeating-linear-gradient(
-        45deg,
-        var(--felt) 0px,
-        var(--felt) 2px,
-        var(--felt-dark) 2px,
-        var(--felt-dark) 4px
-      );
-    background-color:var(--felt);
-    font-family:'Fraunces',serif;
-    color:var(--cream-text);
-    padding:64px 14px 50px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top,#19345c 0%,#071a2e 55%,#061426 100%);
+  color:white;
+  font-family:'Space Mono',monospace;
+  padding:25px 12px 50px;
+}
 
-  /* BALANCE - ADDED */
-  .balance-display{
-    position:fixed;
-    top:12px;
-    left:14px;
-    z-index:50;
-    background:var(--card);
-    color:var(--ink);
-    border-radius:999px;
-    padding:8px 16px;
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.05rem;
-    letter-spacing:0.05em;
-    box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  }
+.app{
+  width:100%;
+  max-width:760px;
+  margin:auto;
+}
 
-  .balance-display span{
-    color:var(--dauber);
-  }
+.logo{
+  text-align:center;
+  margin:10px 0 5px;
+}
 
-  .marquee{
-    text-align:center;
-    margin-bottom:14px;
-  }
+.logo h1{
+  margin:0;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.5rem,12vw,6rem);
+  letter-spacing:.05em;
+  color:var(--cyan);
+}
 
-  .marquee h1{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(2.2rem,7vw,3.4rem);
-    letter-spacing:0.08em;
-    margin:0;
-    color:var(--brass-light);
-    text-shadow:0 2px 0 rgba(0,0,0,0.4);
-  }
+.subtitle{
+  text-align:center;
+  color:#9aa5bb;
+  letter-spacing:.15em;
+  font-size:.8rem;
+  margin-bottom:20px;
+}
 
-  .marquee p{
-    font-family:'Space Mono',monospace;
-    font-size:0.7rem;
-    letter-spacing:0.14em;
-    text-transform:uppercase;
-    color:rgba(243,232,206,0.55);
-    margin:4px 0 0;
-  }
+/* BALANCE */
+.balance-box{
+  width:max-content;
+  max-width:100%;
+  margin:0 auto 25px;
+  padding:10px 20px;
+  border:1px solid rgba(40,214,176,.35);
+  border-radius:15px;
+  background:rgba(255,255,255,.08);
+  text-align:center;
+}
 
-  .demo-flag{
-    font-family:'Space Mono',monospace;
-    font-size:0.65rem;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    color:var(--brass-light);
-    background:rgba(201,162,39,0.15);
-    border:1px solid rgba(201,162,39,0.4);
-    padding:4px 10px;
-    border-radius:20px;
-    margin-top:8px;
-    display:inline-block;
-  }
+.balance-label{
+  color:#9aa5bb;
+  font-size:.7rem;
+  letter-spacing:.08em;
+}
 
-  .topbar{
-    position:fixed;
-    top:12px;
-    right:14px;
-    z-index:50;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    background:var(--card);
-    border-radius:999px;
-    padding:6px 8px 6px 16px;
-    box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  }
+.balance-value{
+  color:var(--cyan);
+  font-size:1.2rem;
+  font-weight:bold;
+  margin-top:3px;
+}
 
-  .topbar .bal{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.15rem;
-    color:var(--ink);
-    letter-spacing:0.04em;
-    white-space:nowrap;
-  }
+.screen{display:none}
+.screen.active{display:block}
 
-  .topbar .bal span{
-    color:var(--dauber);
-  }
+.rooms{
+  display:grid;
+  gap:16px;
+}
 
-  .topbar button{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:0.85rem;
-    letter-spacing:0.05em;
-    background:var(--brass);
-    color:var(--ink);
-    border:none;
-    padding:7px 12px;
-    border-radius:999px;
-    cursor:pointer;
-    box-shadow:0 2px 0 #8a6f18;
-    white-space:nowrap;
-  }
+.room{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;
+  padding:22px;
+  cursor:pointer;
+  transition:.2s;
+}
 
-  .topbar button.wd{
-    background:transparent;
-    color:var(--dauber);
-    border:1px solid var(--dauber);
-    box-shadow:none;
-  }
+.room:hover{
+  transform:translateY(-2px);
+  border-color:var(--cyan);
+}
 
-  .topbar button:active{
-    transform:translateY(1px);
-  }
+.room-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-  @media(max-width:480px){
-    .topbar{
-      position:static;
-      margin:0 auto 14px;
-    }
+.room-title h2{
+  margin:0;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2rem;
+  color:white;
+  letter-spacing:.05em;
+}
 
-    .balance-display{
-      position:static;
-      margin-bottom:10px;
-    }
-  }
+.room-price{
+  color:var(--cyan);
+  font-size:1.3rem;
+  font-weight:bold;
+}
 
-  .screen{
-    width:100%;
-    max-width:680px;
-    display:none;
-    flex-direction:column;
-    align-items:center;
-  }
+.room-info{
+  margin-top:15px;
+  color:#aeb8ca;
+  font-size:.75rem;
+  line-height:1.8;
+}
 
-  .screen.active{
-    display:flex;
+.stats{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:22px;
+  margin:15px 0 22px;
+  font-size:.75rem;
+  color:#aab4c7;
+}
+
+.stats b{
+  color:var(--cyan);
+}
+
+.timer{
+  text-align:center;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.3rem;
+  color:var(--cyan);
+  margin-bottom:12px;
+}
+
+.panel{
+  background:var(--panel);
+  color:var(--text);
+  border-radius:25px;
+  padding:25px 15px 20px;
+  overflow:hidden;
+}
+
+.panel-title{
+  text-align:center;
+  font-family:'Bebas Neue',sans-serif;
+  color:var(--blue);
+  font-size:2.4rem;
+  letter-spacing:.08em;
+  margin-bottom:20px;
+}
+
+.search{
+  display:block;
+  width:90%;
+  max-width:340px;
+  margin:0 auto 22px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid #d8dce5;
+  background:white;
+  text-align:center;
+  font-family:'Space Mono',monospace;
+  font-size:1rem;
+  outline:none;
+}
+
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  max-height:560px;
+  overflow-y:auto;
+  padding:4px;
+}
+
+.card-choice{
+  min-height:64px;
+  border:1px solid #d8dce5;
+  border-radius:15px;
+  background:#fff;
+  color:#182235;
+  font-family:'Space Mono',monospace;
+  font-weight:bold;
+  font-size:.95rem;
+  cursor:pointer;
+}
+
+.card-choice:hover{
+  border-color:var(--blue);
+}
+
+.card-choice.selected{
+  background:var(--blue);
+  color:white;
+  border-color:var(--blue);
+}
+
+.card-choice.taken{
+  background:#c8ccd5;
+  color:#777;
+  cursor:not-allowed;
+}
+
+.selection-info{
+  text-align:center;
+  margin-top:17px;
+  color:#777f91;
+  font-size:.75rem;
+}
+
+.start-game{
+  display:block;
+  width:100%;
+  margin-top:18px;
+  padding:15px;
+  border:0;
+  border-radius:14px;
+  background:var(--cyan);
+  color:#082039;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;
+  cursor:pointer;
+}
+
+.start-game:disabled{
+  opacity:.4;
+}
+
+.caller{
+  text-align:center;
+}
+
+.ball-ring{
+  width:190px;
+  height:190px;
+  margin:20px auto;
+  border:7px solid var(--cyan);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 35px rgba(40,214,176,.15);
+}
+
+.ball{
+  width:135px;
+  height:135px;
+  background:#f7f8fb;
+  color:#182235;
+  border-radius:50%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+.ball-letter{
+  color:var(--blue);
+  font-size:1.4rem;
+  font-weight:bold;
+}
+
+.ball-number{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:3.5rem;
+  line-height:1;
+}
+
+.next-call{
+  color:#929db1;
+  font-size:.8rem;
+  margin:15px 0;
+}
+
+.called{
+  color:#aab4c7;
+  font-size:.72rem;
+  margin-bottom:30px;
+}
+
+.bingo-card{
+  background:var(--panel);
+  color:var(--text);
+  border-radius:25px;
+  padding:20px 12px;
+}
+
+.bingo-header{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.bingo-header div{
+  font-family:'Bebas Neue',sans-serif;
+  color:var(--blue);
+  font-size:2.2rem;
+}
+
+.bingo-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+}
+
+.cell{
+  aspect-ratio:1;
+  border:1px solid #d9dce4;
+  border-radius:12px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:.85rem;
+  position:relative;
+}
+
+.cell.marked{
+  background:var(--blue);
+  color:white;
+}
+
+.cell.free{
+  background:#e8ebff;
+  color:var(--blue);
+}
+
+.win{
+  text-align:center;
+  color:var(--cyan);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.5rem;
+  margin-top:18px;
+}
+
+.prize{
+  text-align:center;
+  color:var(--text);
+  font-weight:bold;
+  margin-top:8px;
+}
+
+.back{
+  display:block;
+  margin:20px auto 0;
+  padding:12px 25px;
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:12px;
+  background:transparent;
+  color:white;
+  cursor:pointer;
+}
+
+@media(max-width:500px){
+  body{padding:15px 8px 35px}
+
+  .logo h1{
+    font-size:4rem;
   }
 
   .panel{
-    background:var(--card);
-    color:var(--ink);
-    border-radius:10px;
-    padding:20px;
-    width:100%;
-    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    padding:20px 8px;
   }
 
-  .panel-title{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.3rem;
-    letter-spacing:0.08em;
-    text-align:center;
-    color:var(--dauber);
-    margin-bottom:12px;
+  .card-grid{
+    gap:7px;
   }
 
-  .room-list{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+  .card-choice{
+    min-height:58px;
+    font-size:.8rem;
   }
 
-  .room-card{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:#fffdf6;
-    border:1px solid var(--card-line);
-    border-radius:8px;
-    padding:12px 14px;
-    cursor:pointer;
+  .bingo-card{
+    padding:17px 7px;
   }
 
-  .room-card:hover{
-    border-color:var(--brass);
-  }
-
-  .room-name{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.1rem;
-    letter-spacing:0.05em;
-    color:var(--ink);
-  }
-
-  .room-meta{
-    font-family:'Space Mono',monospace;
-    font-size:0.68rem;
-    color:rgba(29,43,42,0.55);
-    text-transform:uppercase;
-    letter-spacing:0.05em;
-  }
-
-  .room-pool{
-    text-align:right;
-  }
-
-  .room-pool .amt{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.3rem;
-    color:var(--dauber);
-  }
-
-  .room-pool .lbl{
-    font-family:'Space Mono',monospace;
-    font-size:0.6rem;
-    text-transform:uppercase;
-    color:rgba(29,43,42,0.5);
-  }
-
-  .room-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:14px;
-    width:100%;
-    font-family:'Space Mono',monospace;
-    font-size:0.7rem;
-    text-transform:uppercase;
-    letter-spacing:0.06em;
-    color:rgba(243,232,206,0.75);
-  }
-
-  .room-timer{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.6rem;
-    color:var(--brass-light);
-  }
-
-  .room-stats{
-    display:flex;
-    gap:18px;
-    margin-bottom:14px;
-    font-family:'Space Mono',monospace;
-    font-size:0.7rem;
-    text-transform:uppercase;
-    letter-spacing:0.05em;
-    color:rgba(243,232,206,0.7);
-  }
-
-  .room-stats b{
-    color:var(--brass-light);
-    font-size:0.95rem;
-  }
-
-  .search-row{
-    display:flex;
-    justify-content:center;
-    margin-bottom:12px;
-  }
-
-  .search-row input{
-    font-family:'Space Mono',monospace;
-    font-size:0.85rem;
-    padding:8px 12px;
-    border:1px solid var(--card-line);
-    border-radius:6px;
-    width:150px;
-    text-align:center;
-    background:#fffdf6;
-    color:var(--ink);
-  }
-
-  .num-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(44px,1fr));
-    gap:6px;
-    max-height:300px;
-    overflow-y:auto;
-    padding-right:4px;
-  }
-
-  .num-btn{
-    font-family:'Space Mono',monospace;
-    font-weight:700;
-    font-size:0.8rem;
-    background:#fffdf6;
-    border:1px solid var(--card-line);
-    border-radius:6px;
-    padding:9px 0;
-    cursor:pointer;
-    color:var(--ink);
-    position:relative;
-  }
-
-  .num-btn:hover{
-    background:#fbf2d9;
-    border-color:var(--brass);
-  }
-
-  .num-btn.selected{
-    background:var(--dauber);
-    color:#fff5e6;
-    border-color:var(--dauber);
-  }
-
-  .num-btn.locked{
-    background:var(--locked);
-    color:#e8e4d8;
-    border-color:var(--locked);
-    cursor:not-allowed;
-    opacity:0.75;
-  }
-
-  .pick-status{
-    text-align:center;
-    margin-top:10px;
-    font-family:'Space Mono',monospace;
-    font-size:0.72rem;
-    color:rgba(29,43,42,0.6);
-  }
-
-  .stage{
-    display:flex;
-    gap:28px;
-    flex-wrap:wrap;
-    justify-content:center;
-    align-items:flex-start;
-    width:100%;
-  }
-
-  .caller-panel{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:10px;
-    min-width:190px;
-  }
-
-  .ball-well{
-    width:130px;
-    height:130px;
-    border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,#2a5a48,var(--felt-dark) 70%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:
-      inset 0 0 20px rgba(0,0,0,0.6),
-      0 0 0 4px var(--brass);
-  }
-
-  .ball{
-    width:96px;
-    height:96px;
-    border-radius:50%;
-    background:radial-gradient(
-      circle at 32% 28%,
-      #fffdf6,
-      var(--card) 55%,
-      #e8d9ae 100%
-    );
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    box-shadow:
-      0 6px 14px rgba(0,0,0,0.5),
-      inset 0 -6px 10px rgba(0,0,0,0.12);
-  }
-
-  .ball.pop{
-    animation:popIn 0.5s cubic-bezier(.34,1.56,.64,1);
-  }
-
-  @keyframes popIn{
-    0%{
-      transform:scale(0.2) rotate(-30deg);
-      opacity:0;
-    }
-    60%{
-      transform:scale(1.15) rotate(8deg);
-      opacity:1;
-    }
-    100%{
-      transform:scale(1) rotate(0deg);
-    }
-  }
-
-  .ball .letter{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:0.9rem;
-    color:var(--dauber);
-    letter-spacing:0.05em;
-  }
-
-  .ball .num{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:2.2rem;
-    line-height:1;
-    color:var(--ink);
-  }
-
-  .next-in{
-    font-family:'Space Mono',monospace;
-    font-size:0.68rem;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    color:rgba(243,232,206,0.55);
-  }
-
-  .called-log{
-    width:100%;
-    max-width:210px;
-    font-family:'Space Mono',monospace;
-    font-size:0.7rem;
-    color:rgba(243,232,206,0.6);
-    text-align:center;
-    line-height:1.6;
-    min-height:2.4em;
-  }
-
-  .card-wrap{
-    background:var(--card);
-    padding:14px;
-    border-radius:10px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.4);
-  }
-
-  .card-title{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.6rem;
-    letter-spacing:0.15em;
-    text-align:center;
-    color:var(--dauber);
-    margin-bottom:2px;
-  }
-
-  .card-number{
-    font-family:'Space Mono',monospace;
-    font-size:0.65rem;
-    letter-spacing:0.1em;
-    text-align:center;
-    color:rgba(29,43,42,0.5);
-    margin-bottom:8px;
-    text-transform:uppercase;
-  }
-
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(5,50px);
-    grid-template-rows:repeat(5,50px);
-    gap:6px;
+  .bingo-grid,
+  .bingo-header{
+    gap:5px;
   }
 
   .cell{
-    background:#fffdf6;
-    border:1px solid var(--card-line);
-    border-radius:6px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:'Space Mono',monospace;
-    font-weight:700;
-    font-size:1rem;
-    color:var(--ink);
-    position:relative;
-    user-select:none;
+    border-radius:9px;
+    font-size:.72rem;
   }
 
-  .cell.free{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:0.72rem;
-    letter-spacing:0.05em;
-    color:var(--brass);
-    background:#fbf2d9;
+  .ball-ring{
+    width:165px;
+    height:165px;
   }
 
-  .cell.marked::after{
-    content:'';
-    position:absolute;
-    inset:5px;
-    background:var(--dauber);
-    border-radius:50%;
-    opacity:0.85;
-    box-shadow:
-      inset 0 -3px 4px rgba(0,0,0,0.3),
-      0 1px 2px rgba(0,0,0,0.3);
+  .ball{
+    width:120px;
+    height:120px;
   }
-
-  .cell.marked{
-    color:#fff5e6;
-  }
-
-  .cell.marked span{
-    position:relative;
-    z-index:2;
-  }
-
-  .cell.win-cell::after{
-    background:var(--brass);
-    box-shadow:
-      0 0 8px var(--brass-light),
-      inset 0 -3px 4px rgba(0,0,0,0.25);
-  }
-
-  .status{
-    margin-top:10px;
-    text-align:center;
-    font-family:'Space Mono',monospace;
-    font-size:0.7rem;
-    letter-spacing:0.06em;
-    color:rgba(29,43,42,0.6);
-  }
-
-  .win-banner{
-    display:none;
-    margin-top:10px;
-    text-align:center;
-    font-family:'Bebas Neue',sans-serif;
-    font-size:1.4rem;
-    letter-spacing:0.1em;
-    color:var(--dauber);
-  }
-
-  .win-banner.show{
-    display:block;
-    animation:popIn 0.4s ease;
-  }
-
-  .payout{
-    display:none;
-    margin-top:8px;
-    text-align:center;
-    font-family:'Space Mono',monospace;
-    font-size:0.75rem;
-    color:var(--dauber);
-  }
-
-  .payout.show{
-    display:block;
-  }
-
-  .link-btn{
-    margin-top:12px;
-    font-family:'Space Mono',monospace;
-    font-size:0.72rem;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    background:transparent;
-    color:rgba(243,232,206,0.7);
-    border:1px solid rgba(243,232,206,0.3);
-    padding:8px 16px;
-    border-radius:4px;
-    cursor:pointer;
-  }
-
-  .link-btn:hover{
-    border-color:var(--brass-light);
-    color:var(--brass-light);
-  }
-
-  @media(max-width:480px){
-    .grid{
-      grid-template-columns:repeat(5,16vw);
-      grid-template-rows:repeat(5,16vw);
-    }
-
-    .cell{
-      font-size:0.85rem;
-    }
-  }
-
-  @media(prefers-reduced-motion:reduce){
-    .ball.pop,
-    .win-banner.show{
-      animation:none;
-    }
-  }
+}
 </style>
 </head>
 
 <body>
 
-<!-- BALANCE DISPLAY -->
-<div class="balance-display">
-  Balance: <span id="balanceAmt">0 ETB</span>
-</div>
+<div class="app">
 
-<div class="topbar">
-  <button id="depositBtn">Deposit</button>
-  <button class="wd" id="withdrawBtn">Withdraw</button>
-</div>
-
-<div class="marquee">
-  <h1>Lucky Bingo</h1>
-  <p>Rooms &middot; live cards &middot; auto-call</p>
-</div>
-
-<div class="screen active" id="screenRooms">
-  <div class="panel">
-    <div class="panel-title">Open Rooms</div>
-    <div class="room-list" id="roomList"></div>
-  </div>
-</div>
-
-<div class="screen" id="screenSelect">
-
-  <div class="room-header">
-    <span id="roomLabel">Room</span>
-    <span class="room-timer" id="selectTimer">50</span>
+  <div class="logo">
+    <h1>LUCKY BINGO</h1>
   </div>
 
-  <div class="room-stats">
-    <span>Players: <b id="playerCount">1</b></span>
-    <span>Prize pool: <b id="poolAmt">0</b> ETB</span>
-    <span>Entry: <b id="entryAmt">0</b> ETB</span>
+  <div class="subtitle">
+    ROOMS · LIVE CARDS
   </div>
 
-  <div class="panel">
+  <!-- BALANCE -->
+  <div class="balance-box">
+    <div class="balance-label">BALANCE</div>
+    <div class="balance-value" id="balance">0 ETB</div>
+  </div>
 
-    <div class="panel-title">
-      Pick your card &mdash; 1 to 250
+
+  <!-- ROOMS -->
+  <div class="screen active" id="roomsScreen">
+
+    <div class="rooms">
+
+      <div class="room" onclick="openRoom(20)">
+        <div class="room-title">
+          <h2>20 ETB PLAY</h2>
+          <div class="room-price">20 ETB</div>
+        </div>
+
+        <div class="room-info">
+          Players: <b id="room20Players">0</b><br>
+          Cards Taken: <b id="room20Cards">0</b><br>
+          Prize: <b id="room20Prize">0 ETB</b>
+        </div>
+      </div>
+
+      <div class="room" onclick="openRoom(40)">
+        <div class="room-title">
+          <h2>40 ETB PLAY</h2>
+          <div class="room-price">40 ETB</div>
+        </div>
+
+        <div class="room-info">
+          Players: <b id="room40Players">0</b><br>
+          Cards Taken: <b id="room40Cards">0</b><br>
+          Prize: <b id="room40Prize">0 ETB</b>
+        </div>
+      </div>
+
     </div>
 
-    <div class="search-row">
+  </div>
+
+
+  <!-- CARD SELECT -->
+  <div class="screen" id="selectScreen">
+
+    <div class="stats">
+      <span>ROOM: <b id="selectRoom">20 ETB PLAY</b></span>
+      <span>PLAYERS: <b id="selectPlayers">0</b></span>
+      <span>CARDS: <b id="selectCards">0</b></span>
+      <span>PRIZE: <b id="selectPrize">0 ETB</b></span>
+    </div>
+
+    <div class="timer">
+      <span id="timer">50</span>
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-title">
+        PICK YOUR CARDS
+      </div>
+
       <input
+        class="search"
         type="number"
-        id="searchNum"
         min="1"
         max="250"
-        placeholder="Jump to #"
+        id="search"
+        placeholder="Card 1 - 250"
       >
-    </div>
 
-    <div class="num-grid" id="numGrid"></div>
+      <div class="card-grid" id="cardGrid"></div>
 
-    <div class="pick-status" id="pickStatus">
-      Tap a number before time runs out.
-      Taken numbers lock automatically.
+      <div class="selection-info">
+        Selected: <b id="selectedCount">0</b> / 4 cards
+      </div>
+
+      <div class="selection-info" id="selectionMessage">
+        You can select up to 4 cards.
+      </div>
+
+      <button
+        class="start-game"
+        id="startButton"
+        onclick="startGame()"
+        disabled
+      >
+        WAITING FOR CARDS
+      </button>
+
     </div>
 
   </div>
-</div>
 
-<div class="screen" id="screenGame">
 
-  <div class="room-stats">
-    <span>Room: <b id="gameRoomLabel">&mdash;</b></span>
-    <span>Players: <b id="gamePlayerCount">&mdash;</b></span>
-    <span>Prize pool: <b id="gamePoolAmt">&mdash;</b> ETB</span>
-  </div>
+  <!-- GAME -->
+  <div class="screen" id="gameScreen">
 
-  <div class="stage">
+    <div class="stats">
+      <span>ROOM: <b id="gameRoom">20 ETB PLAY</b></span>
+      <span>PLAYERS: <b id="gamePlayers">0</b></span>
+      <span>CARDS: <b id="gameCards">0</b></span>
+      <span>PRIZE: <b id="gamePrize">0 ETB</b></span>
+    </div>
 
-    <div class="caller-panel">
+    <div class="caller">
 
-      <div class="ball-well">
+      <div class="ball-ring">
 
-        <div class="ball" id="ball">
+        <div class="ball">
 
-          <div class="letter" id="ballLetter">&mdash;</div>
+          <div class="ball-letter" id="ballLetter">-</div>
 
-          <div class="num" id="ballNum">?</div>
+          <div class="ball-number" id="ballNumber">
+            ?
+          </div>
 
         </div>
 
       </div>
 
-      <div class="next-in" id="nextIn">
-        Next call in 4s
+      <div class="next-call" id="nextCall">
+        NEXT CALL IN 1S
       </div>
 
-      <div class="called-log" id="calledLog">
-        No numbers called yet.
+      <div class="called" id="calledNumbers">
+        0 called
       </div>
 
     </div>
 
-    <div>
 
-      <div class="card-wrap">
+    <div id="playerCards"></div>
 
-        <div class="card-title">
-          B I N G O
-        </div>
-
-        <div class="card-number" id="cardNumberLabel">
-          Card #&mdash;
-        </div>
-
-        <div class="grid" id="grid"></div>
-
-        <div class="status" id="status">
-          Waiting for first call&hellip;
-        </div>
-
-        <div class="win-banner" id="winBanner">
-          BINGO!
-        </div>
-
-        <div class="payout" id="payoutLine"></div>
-
-      </div>
-
-      <div style="text-align:center;">
-        <button class="link-btn" id="newCardBtn">
-          Back to rooms
-        </button>
-      </div>
-
-    </div>
+    <button class="back" onclick="backToRooms()">
+      BACK TO ROOMS
+    </button>
 
   </div>
 
 </div>
+
 
 <script>
-(function(){
 
-  const COLS = {
-    B:[1,15],
-    I:[16,30],
-    N:[31,45],
-    G:[46,60],
-    O:[61,75]
-  };
+const MAX_CARDS_PER_PLAYER = 4;
+const SELECT_TIME = 50;
+const CALL_SPEED = 1000;
 
-  const LETTERS = ['B','I','N','G','O'];
+const ROOMS = {
 
-  const SELECT_SECONDS = 50;
+  20:{
+    name:"20 ETB PLAY",
+    entry:20,
+    perCardPrize:17
+  },
 
-  const CALL_INTERVAL_MS = 4000;
+  40:{
+    name:"40 ETB PLAY",
+    entry:40,
+    perCardPrize:37
+  }
 
-  let balance = 0;
+};
 
-  let currentRoom = null;
+let currentRoom = null;
 
-  let roomPlayers = 1;
+let selectedCards = [];
 
-  let lockedNumbers = new Set();
+let selectedCardNumbers = new Set();
 
-  let myCardNumber = null;
+let calledNumbers = [];
 
-  let card = [];
+let remainingNumbers = [];
 
-  let called = [];
+let timerInterval = null;
 
-  let remaining = [];
+let callerInterval = null;
 
-  let won = false;
+let gameRunning = false;
 
-  let selectTimer = null;
-
-  let botLockTimer = null;
-
-  let callTimer = null;
-
-  let nextInTimer = null;
-
-  let msUntilNextCall = CALL_INTERVAL_MS;
+let gameOver = false;
 
 
-  const screenRooms =
-    document.getElementById('screenRooms');
+/* BALANCE DISPLAY */
 
-  const screenSelect =
-    document.getElementById('screenSelect');
+let balance = 0;
 
-  const screenGame =
-    document.getElementById('screenGame');
+function updateBalance(){
 
-  const balanceAmt =
-    document.getElementById('balanceAmt');
+  document.getElementById("balance").textContent =
+    balance + " ETB";
 
-  const depositBtn =
-    document.getElementById('depositBtn');
+}
 
-  const withdrawBtn =
-    document.getElementById('withdrawBtn');
 
-  const roomList =
-    document.getElementById('roomList');
+/* ROOM STATE */
 
-  const roomLabel =
-    document.getElementById('roomLabel');
+let roomState = {
 
-  const selectTimerEl =
-    document.getElementById('selectTimer');
+  20:{
+    players:0,
+    cards:0
+  },
 
-  const playerCountEl =
-    document.getElementById('playerCount');
+  40:{
+    players:0,
+    cards:0
+  }
 
-  const poolAmtEl =
-    document.getElementById('poolAmt');
+};
 
-  const entryAmtEl =
-    document.getElementById('entryAmt');
 
-  const numGrid =
-    document.getElementById('numGrid');
+/* PRIZE */
 
-  const searchNum =
-    document.getElementById('searchNum');
+function getPrize(roomPrice,cards){
 
-  const pickStatus =
-    document.getElementById('pickStatus');
+  if(cards <= 0) return 0;
+
+  return cards * ROOMS[roomPrice].perCardPrize;
+
+}
+
+
+/* UPDATE ROOMS */
+
+function updateRooms(){
+
+  document.getElementById("room20Players").textContent =
+    roomState[20].players;
+
+  document.getElementById("room20Cards").textContent =
+    roomState[20].cards;
+
+  document.getElementById("room20Prize").textContent =
+    getPrize(20,roomState[20].cards) + " ETB";
+
+
+  document.getElementById("room40Players").textContent =
+    roomState[40].players;
+
+  document.getElementById("room40Cards").textContent =
+    roomState[40].cards;
+
+  document.getElementById("room40Prize").textContent =
+    getPrize(40,roomState[40].cards) + " ETB";
+
+}
+
+
+/* OPEN ROOM */
+
+function openRoom(price){
+
+  currentRoom = price;
+
+  selectedCards = [];
+
+  selectedCardNumbers.clear();
+
+  document.getElementById("roomsScreen")
+    .classList.remove("active");
+
+  document.getElementById("selectScreen")
+    .classList.add("active");
+
+  document.getElementById("selectRoom").textContent =
+    ROOMS[price].name;
+
+  renderCardPicker();
+
+  updateSelection();
+
+  startSelectionTimer();
+
+}
+
+
+/* CARD PICKER */
+
+function renderCardPicker(){
 
   const grid =
-    document.getElementById('grid');
+    document.getElementById("cardGrid");
 
-  const ball =
-    document.getElementById('ball');
+  grid.innerHTML = "";
 
-  const ballLetter =
-    document.getElementById('ballLetter');
+  for(let n=1;n<=250;n++){
 
-  const ballNum =
-    document.getElementById('ballNum');
+    const button =
+      document.createElement("button");
 
-  const nextInEl =
-    document.getElementById('nextIn');
+    button.className =
+      "card-choice";
 
-  const calledLog =
-    document.getElementById('calledLog');
+    button.textContent = n;
 
-  const statusEl =
-    document.getElementById('status');
+    button.dataset.number = n;
 
-  const winBanner =
-    document.getElementById('winBanner');
+    button.onclick = function(){
 
-  const payoutLine =
-    document.getElementById('payoutLine');
+      selectCard(n,button);
 
-  const newCardBtn =
-    document.getElementById('newCardBtn');
+    };
 
-  const cardNumberLabel =
-    document.getElementById('cardNumberLabel');
+    grid.appendChild(button);
 
-  const gameRoomLabel =
-    document.getElementById('gameRoomLabel');
+  }
 
-  const gamePlayerCount =
-    document.getElementById('gamePlayerCount');
-
-  const gamePoolAmt =
-    document.getElementById('gamePoolAmt');
+}
 
 
-  function showScreen(el){
+/* SELECT CARD */
 
-    [screenRooms,screenSelect,screenGame]
-      .forEach(s => s.classList.remove('active'));
+function selectCard(number,button){
 
-    el.classList.add('active');
+  if(selectedCardNumbers.has(number)){
+
+    selectedCardNumbers.delete(number);
+
+    selectedCards =
+      selectedCards.filter(n => n !== number);
+
+    button.classList.remove("selected");
+
+    updateSelection();
+
+    return;
 
   }
 
 
-  function fmtBalance(){
+  if(selectedCards.length >= MAX_CARDS_PER_PLAYER){
 
-    balanceAmt.textContent =
-      balance + ' ETB';
+    document.getElementById("selectionMessage").textContent =
+      "Maximum 4 cards per player.";
+
+    return;
 
   }
 
 
-  depositBtn.addEventListener('click',()=>{
+  selectedCards.push(number);
 
-    balance += 100;
+  selectedCardNumbers.add(number);
 
-    fmtBalance();
+  button.classList.add("selected");
 
-  });
+  document.getElementById("selectionMessage").textContent =
+    "Card #" + number + " selected.";
+
+  updateSelection();
+
+}
 
 
-  withdrawBtn.addEventListener('click',()=>{
+/* UPDATE SELECTION */
 
-    if(balance < 100){
+function updateSelection(){
 
-      alert('Not enough balance.');
+  const count =
+    selectedCards.length;
 
-      return;
+  document.getElementById("selectedCount")
+    .textContent = count;
+
+
+  const startButton =
+    document.getElementById("startButton");
+
+
+  if(count > 0){
+
+    startButton.disabled = false;
+
+    startButton.textContent =
+      "START WITH " +
+      count +
+      " CARD" +
+      (count > 1 ? "S" : "");
+
+  }else{
+
+    startButton.disabled = true;
+
+    startButton.textContent =
+      "SELECT A CARD";
+
+  }
+
+
+  const simulatedCards =
+    roomState[currentRoom].cards + count;
+
+  const simulatedPlayers =
+    roomState[currentRoom].players + 1;
+
+
+  document.getElementById("selectPlayers")
+    .textContent =
+      simulatedPlayers;
+
+  document.getElementById("selectCards")
+    .textContent =
+      simulatedCards;
+
+  document.getElementById("selectPrize")
+    .textContent =
+      getPrize(
+        currentRoom,
+        simulatedCards
+      ) + " ETB";
+
+}
+
+
+/* COUNTDOWN */
+
+function startSelectionTimer(){
+
+  clearInterval(timerInterval);
+
+  let seconds =
+    SELECT_TIME;
+
+  document.getElementById("timer").textContent =
+    seconds;
+
+
+  timerInterval =
+    setInterval(()=>{
+
+      seconds--;
+
+      document.getElementById("timer").textContent =
+        seconds;
+
+
+      if(seconds <= 0){
+
+        clearInterval(timerInterval);
+
+        if(selectedCards.length > 0){
+
+          startGame();
+
+        }else{
+
+          backToRooms();
+
+        }
+
+      }
+
+    },1000);
+
+}
+
+
+/* START GAME */
+
+function startGame(){
+
+  if(selectedCards.length === 0)
+    return;
+
+  clearInterval(timerInterval);
+
+
+  roomState[currentRoom].players += 1;
+
+  roomState[currentRoom].cards +=
+    selectedCards.length;
+
+
+  document.getElementById("gameRoom").textContent =
+    ROOMS[currentRoom].name;
+
+  document.getElementById("gamePlayers").textContent =
+    roomState[currentRoom].players;
+
+  document.getElementById("gameCards").textContent =
+    roomState[currentRoom].cards;
+
+  document.getElementById("gamePrize").textContent =
+    getPrize(
+      currentRoom,
+      roomState[currentRoom].cards
+    ) + " ETB";
+
+
+  document.getElementById("selectScreen")
+    .classList.remove("active");
+
+  document.getElementById("gameScreen")
+    .classList.add("active");
+
+
+  createPlayerCards();
+
+  startCaller();
+
+  updateRooms();
+
+}
+
+
+/* CREATE PLAYER CARDS */
+
+function createPlayerCards(){
+
+  const container =
+    document.getElementById("playerCards");
+
+  container.innerHTML = "";
+
+
+  selectedCards.forEach((cardNumber,index)=>{
+
+    const cardBox =
+      document.createElement("div");
+
+    cardBox.className =
+      "bingo-card";
+
+    cardBox.style.marginBottom =
+      "20px";
+
+
+    const title =
+      document.createElement("div");
+
+    title.style.textAlign =
+      "center";
+
+    title.style.color =
+      "#777f91";
+
+    title.style.marginBottom =
+      "10px";
+
+    title.textContent =
+      "CARD #" + cardNumber;
+
+
+    cardBox.appendChild(title);
+
+
+    const header =
+      document.createElement("div");
+
+    header.className =
+      "bingo-header";
+
+
+    ["B","I","N","G","O"].forEach(letter=>{
+
+      const h =
+        document.createElement("div");
+
+      h.textContent =
+        letter;
+
+      header.appendChild(h);
+
+    });
+
+
+    cardBox.appendChild(header);
+
+
+    const grid =
+      document.createElement("div");
+
+    grid.className =
+      "bingo-grid";
+
+
+    const card =
+      generateBingoCard(cardNumber);
+
+
+    for(let row=0;row<5;row++){
+
+      for(let col=0;col<5;col++){
+
+        const cell =
+          document.createElement("div");
+
+        cell.className =
+          "cell";
+
+
+        if(row===2 && col===2){
+
+          cell.classList.add("free");
+
+          cell.textContent =
+            "FREE";
+
+        }else{
+
+          cell.textContent =
+            card[row][col];
+
+        }
+
+
+        cell.dataset.number =
+          card[row][col] || "";
+
+
+        grid.appendChild(cell);
+
+      }
 
     }
 
-    balance -= 100;
 
-    fmtBalance();
+    cardBox.appendChild(grid);
+
+
+    const status =
+      document.createElement("div");
+
+    status.className =
+      "selection-info";
+
+    status.id =
+      "cardStatus_" + index;
+
+    status.textContent =
+      "Waiting for numbers...";
+
+
+    cardBox.appendChild(status);
+
+    container.appendChild(cardBox);
 
   });
 
+}
 
-  const ROOMS = [
 
-    {
-      id:'r1',
-      name:'20 ETB Room',
-      entry:20,
-      botsMin:8,
-      botsMax:20
-    },
+/* BINGO CARD */
 
-    {
-      id:'r2',
-      name:'40 ETB Room',
-      entry:40,
-      botsMin:6,
-      botsMax:16
-    }
+function generateBingoCard(seed){
+
+  const columns = [
+
+    range(1,15),
+
+    range(16,30),
+
+    range(31,45),
+
+    range(46,60),
+
+    range(61,75)
 
   ];
 
 
-  function renderRooms(){
+  const result =
+    Array.from(
+      {length:5},
+      ()=>Array(5).fill(null)
+    );
 
-    roomList.innerHTML='';
 
-    ROOMS.forEach(r=>{
+  for(let col=0;col<5;col++){
 
-      const players =
-        Math.floor(
-          Math.random() *
-          (r.botsMax-r.botsMin+1)
-        ) + r.botsMin;
+    const numbers =
+      shuffle([...columns[col]])
+      .slice(0,5);
 
-      const pool =
-        players * r.entry;
 
-      const div =
-        document.createElement('div');
+    for(let row=0;row<5;row++){
 
-      div.className='room-card';
+      if(row===2 && col===2){
 
-      div.innerHTML=`
+        result[row][col] =
+          null;
 
-        <div>
+      }else{
 
-          <div class="room-name">
-            ${r.name}
-          </div>
+        result[row][col] =
+          numbers[row];
 
-          <div class="room-meta">
-            Entry ${r.entry} ETB
-            &middot;
-            ${players} players in room
-          </div>
+      }
 
-        </div>
-
-        <div class="room-pool">
-
-          <div class="amt">
-            ${pool}
-          </div>
-
-          <div class="lbl">
-            prize pool
-          </div>
-
-        </div>
-
-      `;
-
-      div.addEventListener(
-        'click',
-        ()=>joinRoom(r,players)
-      );
-
-      roomList.appendChild(div);
-
-    });
+    }
 
   }
 
 
-  function joinRoom(room,startingPlayers){
+  return result;
 
-    if(balance < room.entry){
+}
 
-      alert(
-        "Not enough balance for this room."
+
+function range(start,end){
+
+  const result = [];
+
+  for(let n=start;n<=end;n++){
+
+    result.push(n);
+
+  }
+
+  return result;
+
+}
+
+
+function shuffle(array){
+
+  for(
+    let i=array.length-1;
+    i>0;
+    i--
+  ){
+
+    const j =
+      Math.floor(
+        Math.random()*(i+1)
+      );
+
+
+    [array[i],array[j]] =
+      [array[j],array[i]];
+
+  }
+
+  return array;
+
+}
+
+
+/* AUTOMATIC CALLER */
+
+function startCaller(){
+
+  clearInterval(callerInterval);
+
+  calledNumbers = [];
+
+  remainingNumbers =
+    shuffle(
+      range(1,75)
+    );
+
+  gameRunning = true;
+
+  gameOver = false;
+
+
+  callNumber();
+
+
+  callerInterval =
+    setInterval(()=>{
+
+      if(!gameRunning || gameOver)
+        return;
+
+      callNumber();
+
+    },CALL_SPEED);
+
+}
+
+
+/* CALL NUMBER */
+
+function callNumber(){
+
+  if(remainingNumbers.length === 0){
+
+    stopCaller();
+
+    return;
+
+  }
+
+
+  const number =
+    remainingNumbers.shift();
+
+
+  calledNumbers.push(number);
+
+
+  const letter =
+    getLetter(number);
+
+
+  document.getElementById("ballLetter")
+    .textContent =
+      letter;
+
+  document.getElementById("ballNumber")
+    .textContent =
+      number;
+
+
+  document.getElementById("calledNumbers")
+    .textContent =
+      calledNumbers.length +
+      " called";
+
+
+  document.getElementById("nextCall")
+    .textContent =
+      "NEXT CALL IN 1S";
+
+
+  markNumber(number);
+
+}
+
+
+/* BINGO LETTER */
+
+function getLetter(number){
+
+  if(number <= 15)
+    return "B";
+
+  if(number <= 30)
+    return "I";
+
+  if(number <= 45)
+    return "N";
+
+  if(number <= 60)
+    return "G";
+
+  return "O";
+
+}
+
+
+/* MARK NUMBERS */
+
+function markNumber(number){
+
+  const cards =
+    document.querySelectorAll(
+      ".bingo-card"
+    );
+
+
+  cards.forEach((cardBox,index)=>{
+
+    const cells =
+      cardBox.querySelectorAll(
+        ".cell"
+      );
+
+
+    cells.forEach(cell=>{
+
+      if(
+        Number(cell.dataset.number)
+        === number
+      ){
+
+        cell.classList.add("marked");
+
+      }
+
+    });
+
+
+    checkBingo(
+      cardBox,
+      index
+    );
+
+  });
+
+}
+
+
+/* CHECK BINGO */
+
+function checkBingo(cardBox,index){
+
+  const cells =
+    cardBox.querySelectorAll(
+      ".cell"
+    );
+
+
+  function marked(row,col){
+
+    return cells[row*5+col]
+      .classList.contains("marked")
+      ||
+      cells[row*5+col]
+      .classList.contains("free");
+
+  }
+
+
+  for(let row=0;row<5;row++){
+
+    let win=true;
+
+
+    for(let col=0;col<5;col++){
+
+      if(!marked(row,col)){
+
+        win=false;
+
+        break;
+
+      }
+
+    }
+
+
+    if(win){
+
+      playerWon(
+        cardBox,
+        index
       );
 
       return;
 
     }
 
-    balance -= room.entry;
-
-    fmtBalance();
-
-    currentRoom = room;
-
-    roomPlayers =
-      startingPlayers + 1;
-
-    lockedNumbers = new Set();
-
-    myCardNumber = null;
-
-    card = [];
-
-    const preLockCount =
-      Math.min(
-        220,
-        Math.floor(
-          startingPlayers *
-          (1+Math.random())
-        )
-      );
-
-    const pool =
-      shuffle(
-        Array.from(
-          {length:250},
-          (_,i)=>i+1
-        )
-      );
-
-    for(
-      let i=0;
-      i<preLockCount;
-      i++
-    ){
-
-      lockedNumbers.add(pool[i]);
-
-    }
-
-    roomLabel.textContent =
-      room.name;
-
-    entryAmtEl.textContent =
-      room.entry;
-
-    updateRoomStats();
-
-    buildPicker();
-
-    showScreen(screenSelect);
-
-    startSelectPhase();
-
   }
 
 
-  function updateRoomStats(){
+  for(let col=0;col<5;col++){
 
-    playerCountEl.textContent =
-      roomPlayers;
-
-    const pool =
-      roomPlayers *
-      currentRoom.entry;
-
-    poolAmtEl.textContent =
-      pool;
-
-  }
+    let win=true;
 
 
-  function mulberry32(seed){
+    for(let row=0;row<5;row++){
 
-    return function(){
+      if(!marked(row,col)){
 
-      seed |= 0;
+        win=false;
 
-      seed =
-        (seed + 0x6D2B79F5) | 0;
-
-      let t =
-        Math.imul(
-          seed ^ (seed >>> 15),
-          1 | seed
-        );
-
-      t =
-        (t +
-          Math.imul(
-            t ^ (t >>> 7),
-            61 | t
-          )
-        ) ^ t;
-
-      return (
-        (t ^ (t >>> 14)) >>> 0
-      ) / 4294967296;
-
-    };
-
-  }
-
-
-  function shuffleWith(arr,rng){
-
-    for(
-      let i=arr.length-1;
-      i>0;
-      i--
-    ){
-
-      const j =
-        Math.floor(
-          rng()*(i+1)
-        );
-
-      [
-        arr[i],
-        arr[j]
-      ]=[
-        arr[j],
-        arr[i]
-      ];
-
-    }
-
-    return arr;
-
-  }
-
-
-  function shuffle(arr){
-
-    for(
-      let i=arr.length-1;
-      i>0;
-      i--
-    ){
-
-      const j =
-        Math.floor(
-          Math.random()*(i+1)
-        );
-
-      [
-        arr[i],
-        arr[j]
-      ]=[
-        arr[j],
-        arr[i]
-      ];
-
-    }
-
-    return arr;
-
-  }
-
-
-  function letterFor(num){
-
-    for(
-      const l of LETTERS
-    ){
-
-      if(
-        num >= COLS[l][0] &&
-        num <= COLS[l][1]
-      ){
-
-        return l;
+        break;
 
       }
 
     }
 
-    return '';
 
-  }
+    if(win){
 
-
-  function buildCardFor(number){
-
-    const rng =
-      mulberry32(
-        number * 2654435761
+      playerWon(
+        cardBox,
+        index
       );
 
-    const result=[];
-
-    for(
-      let col=0;
-      col<5;
-      col++
-    ){
-
-      const [lo,hi] =
-        COLS[LETTERS[col]];
-
-      const pool=[];
-
-      for(
-        let n=lo;
-        n<=hi;
-        n++
-      ){
-
-        pool.push(n);
-
-      }
-
-      shuffleWith(pool,rng);
-
-      const picks =
-        pool.slice(0,5);
-
-      for(
-        let row=0;
-        row<5;
-        row++
-      ){
-
-        if(!result[row])
-          result[row]=[];
-
-        const isFree =
-          row===2 &&
-          col===2;
-
-        result[row][col]={
-          num:isFree
-            ? null
-            : picks[row],
-
-          marked:isFree,
-
-          free:isFree
-        };
-
-      }
+      return;
 
     }
 
-    return result;
+  }
+
+
+  let diagonal1=true;
+
+  let diagonal2=true;
+
+
+  for(let i=0;i<5;i++){
+
+    if(!marked(i,i))
+      diagonal1=false;
+
+    if(!marked(i,4-i))
+      diagonal2=false;
 
   }
 
 
-  function buildPicker(){
+  if(diagonal1 || diagonal2){
 
-    numGrid.innerHTML='';
+    playerWon(
+      cardBox,
+      index
+    );
 
-    for(
-      let n=1;
-      n<=250;
-      n++
-    ){
+  }
 
-      const btn =
-        document.createElement('button');
+}
 
-      btn.className =
-        'num-btn' +
-        (
-          lockedNumbers.has(n)
-            ? ' locked'
-            : ''
-        );
 
-      btn.textContent=n;
+/* WIN */
 
-      btn.dataset.num=n;
+function playerWon(cardBox,index){
 
-      if(
-        !lockedNumbers.has(n)
-      ){
+  if(gameOver)
+    return;
 
-       
+  gameOver=true;
+
+  stopCaller();
+
+
+  const win =
+    document.createElement("div");
+
+  win.className =
+    "win";
+
+  win.textContent =
+    "BINGO!";
+
+
+  const prize =
+    document.createElement("div");
+
+  prize.className =
+    "prize";
+
+  prize.textContent =
+    "PRIZE: " +
+    getPrize(
+      currentRoom,
+      roomState[currentRoom].cards
+    ) +
+    " ETB";
+
+
+  cardBox.appendChild(win);
+
+  cardBox.appendChild(prize);
+
+}
+
+
+/* STOP CALLER */
+
+function stopCaller(){
+
+  clearInterval(callerInterval);
+
+  gameRunning=false;
+
+}
+
+
+/* BACK */
+
+function backToRooms(){
+
+  clearInterval(timerInterval);
+
+  stopCaller();
+
+
+  document.getElementById("gameScreen")
+    .classList.remove("active");
+
+  document.getElementById("selectScreen")
+    .classList.remove("active");
+
+  document.getElementById("roomsScreen")
+    .classList.add("active");
+
+
+  updateRooms();
+
+}
+
+
+/* SEARCH */
+
+document.getElementById("search")
+.addEventListener(
+  "input",
+  function(){
+
+    const number =
+      Number(this.value);
+
+
+    if(
+      number < 1 ||
+      number > 250
+    )
+      return;
+
+
+    const button =
+      document.querySelector(
+        '.card-choice[data-number="' +
+        number +
+        '"]'
+      );
+
+
+    if(button){
+
+      button.scrollIntoView({
+        behavior:"smooth",
+        block:"center"
+      });
+
+    }
+
+  }
+);
+
+
+/* INITIALIZE */
+
+updateBalance();
+
+updateRooms();
+
+</script>
+
+</body>
+  </html>
