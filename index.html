@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hulu Bingo Interface</title>
+    <title>Hulu Bingo</title>
     <style>
         :root {
             --bg-main: #0a0d14;
@@ -16,79 +16,433 @@
             --border-color: #232c3d;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-white); display: flex; justify-content: center; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        }
 
-        .app-view { width: 100%; max-width: 420px; height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; background: var(--bg-main); }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-        /* Top Bar */
-        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--bg-main); }
-        .user-balance { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .avatar { width: 28px; height: 28px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .balance-text { font-size: 0.75rem; color: var(--text-dim); }
-        .balance-val { font-size: 0.85rem; font-weight: bold; color: var(--accent-gold); }
-        .logo-img { font-weight: 900; font-size: 1.2rem; font-style: italic; color: var(--accent-gold); }
+        .app-view {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 880px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+        }
 
-        /* Banner Card */
-        .banner-box { margin: 10px 16px; padding: 14px; background: linear-gradient(180deg, #182030 0%, #0f1420 100%); border-radius: 14px; border: 1px solid var(--accent-gold); display: flex; justify-content: space-between; align-items: center; }
-        .pool-title { font-size: 0.7rem; color: var(--accent-gold); font-weight: bold; }
-        .pool-amount { font-size: 1.5rem; font-weight: 900; color: var(--text-white); }
-        .timer-box { text-align: right; }
-        .timer-label { font-size: 0.65rem; color: var(--text-dim); }
-        .timer-count { font-size: 1.4rem; font-weight: 900; color: var(--text-white); }
+        /* Top Navigation Header */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: var(--bg-main);
+        }
 
-        /* Ticket Selection Grid (1-100) */
-        .selection-container { flex: 1; padding: 0 16px; overflow-y: auto; }
-        .selection-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
-        .grid-100 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding-bottom: 120px; }
-        .num-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-dim); border-radius: 6px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-        .num-btn.active { background: var(--accent-gold); color: #000; font-weight: bold; border-color: var(--accent-gold); }
-        .num-btn.taken { background: #181d28; color: #353e50; border-color: transparent; }
+        .user-balance {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
 
-        /* Bottom Selected Sheet */
-        .bottom-sheet { position: absolute; bottom: 50px; left: 0; right: 0; background: var(--bg-card); border-top-left-radius: 16px; border-top-right-radius: 16px; border-top: 2px solid var(--accent-gold); padding: 12px 16px; }
-        .sheet-handle { width: 40px; height: 4px; background: var(--accent-gold); border-radius: 2px; margin: 0 auto 10px auto; }
-        .selected-cards-preview { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 8px; }
-        .mini-card { background: #fff; color: #000; border-radius: 6px; padding: 4px; width: 110px; flex-shrink: 0; }
-        .mini-card-header { background: #ff0000; color: #fff; font-size: 0.6rem; font-weight: bold; text-align: center; border-radius: 3px; display: grid; grid-template-columns: repeat(5, 1fr); }
-        .mini-card-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; font-size: 0.55rem; text-align: center; margin-top: 2px; }
+        .avatar {
+            width: 28px;
+            height: 28px;
+            background: #fff;
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
 
-        /* Fixed Bottom Action Bar */
-        .action-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 55px; background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; }
-        .total-bet { display: flex; flex-direction: column; }
-        .total-bet-label { font-size: 0.65rem; color: var(--text-dim); }
-        .total-bet-value { font-size: 1.1rem; font-weight: bold; color: var(--text-white); }
-        .live-tag { color: var(--accent-green); font-size: 0.7rem; display: flex; align-items: center; gap: 4px; }
-        .live-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; }
+        .balance-text {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+        }
 
-        /* View Toggle Button */
-        .toggle-btn { position: absolute; top: 10px; right: 10px; background: var(--accent-gold); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; border: none; font-weight: bold; cursor: pointer; z-index: 100; }
+        .balance-val {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
 
-        /* Screen 2: Gameplay Slots */
-        .game-screen { display: none; flex-direction: column; width: 100%; height: 100%; background: var(--bg-main); }
-        .game-header { background: var(--bg-card); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
-        .call-display { display: flex; align-items: center; gap: 8px; margin: 10px 16px; }
-        .current-ball { width: 44px; height: 44px; border-radius: 50%; background: #ffffff; color: #000; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 3px solid #b8c4d0; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        .ball-history { display: flex; gap: 6px; background: var(--bg-card); padding: 6px 10px; border-radius: 20px; flex: 1; border: 1px solid var(--border-color); }
-        .mini-ball { width: 24px; height: 24px; border-radius: 50%; background: #232c3d; color: var(--accent-gold); font-size: 0.65rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .logo-img {
+            font-weight: 900;
+            font-size: 1.2rem;
+            font-style: italic;
+            color: var(--accent-gold);
+        }
 
-        .slots-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 0 16px; flex: 1; margin-bottom: 70px; }
-        .slot-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
-        .card-table { width: 100%; height: 100%; border-collapse: collapse; font-size: 0.7rem; text-align: center; }
-        .card-table th { background: var(--accent-gold); color: #000; padding: 2px; font-weight: bold; }
-        .card-table td { border: 1px solid #232c3d; color: #fff; font-weight: 600; width: 20%; }
-        .card-table td.marked { background: var(--accent-green); color: #000; border-radius: 50%; }
+        /* Mode Switch Button */
+        .toggle-btn {
+            position: absolute;
+            top: 12px;
+            right: 120px;
+            background: rgba(245, 176, 0, 0.2);
+            color: var(--accent-gold);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            border: 1px solid var(--accent-gold);
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 100;
+        }
 
-        .bingo-btn { position: absolute; bottom: 10px; right: 16px; left: 16px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-dim); padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 1rem; }
-        .bingo-btn.active { background: var(--accent-green); color: #000; }
+        /* SCREEN 1: LOBBY */
+        .banner-box {
+            margin: 10px 16px;
+            padding: 14px;
+            background: linear-gradient(180deg, #182030 0%, #0f1420 100%);
+            border-radius: 14px;
+            border: 1px solid var(--accent-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pool-title {
+            font-size: 0.7rem;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        .pool-amount {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--text-white);
+        }
+
+        .timer-box {
+            text-align: right;
+        }
+
+        .timer-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+        }
+
+        .timer-count {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--text-white);
+        }
+
+        .selection-container {
+            flex: 1;
+            padding: 0 16px;
+            overflow-y: auto;
+        }
+
+        .selection-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .grid-100 {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+            padding-bottom: 180px;
+        }
+
+        .num-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-white);
+            border-radius: 6px;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .num-btn.active {
+            background: var(--accent-gold);
+            color: #000;
+            font-weight: bold;
+            border-color: var(--accent-gold);
+        }
+
+        .num-btn.taken {
+            background: #141822;
+            color: #2e3748;
+            border-color: transparent;
+        }
+
+        .bottom-sheet {
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            border-top: 2px solid var(--accent-gold);
+            padding: 12px 16px;
+        }
+
+        .sheet-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--accent-gold);
+            border-radius: 2px;
+            margin: 0 auto 10px auto;
+        }
+
+        .selected-cards-preview {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            margin-bottom: 8px;
+        }
+
+        .mini-card {
+            background: #fff;
+            color: #000;
+            border-radius: 6px;
+            padding: 4px;
+            width: 120px;
+            flex-shrink: 0;
+        }
+
+        .mini-card-header {
+            background: var(--accent-gold);
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 3px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            padding: 2px 0;
+        }
+
+        .mini-card-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px;
+            font-size: 0.55rem;
+            text-align: center;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .action-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .total-bet {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .total-bet-label {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+        }
+
+        .total-bet-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--text-white);
+        }
+
+        .live-tag {
+            color: var(--accent-green);
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: bold;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+        }
+
+        /* SCREEN 2: GAMEPLAY */
+        .game-screen {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-main);
+        }
+
+        .game-header {
+            background: var(--bg-card);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .call-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 16px;
+        }
+
+        .current-ball {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #000;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 3px solid #b8c4d0;
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+
+        .ball-history {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-card);
+            padding: 6px 10px;
+            border-radius: 20px;
+            flex: 1;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .mini-ball {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #232c3d;
+            color: var(--accent-gold);
+            font-size: 0.65rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slots-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            padding: 0 16px;
+            flex: 1;
+            margin-bottom: 70px;
+        }
+
+        .slot-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .card-table th {
+            background: var(--accent-gold);
+            color: #000;
+            padding: 4px 0;
+            font-weight: bold;
+        }
+
+        .card-table td {
+            border: 1px solid #232c3d;
+            color: #fff;
+            font-weight: 600;
+            width: 20%;
+        }
+
+        .card-table td.marked {
+            background: var(--accent-green);
+            color: #000;
+            border-radius: 50%;
+            font-weight: 900;
+        }
+
+        .bingo-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 16px;
+            left: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .bingo-btn.active {
+            background: var(--accent-green);
+            color: #000;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-view">
-    <button class="toggle-btn" onclick="toggleScreens()">Switch Screen Mode</button>
+    <button class="toggle-btn" onclick="toggleScreens()">ቅይር (Switch View)</button>
 
-    <!-- SCREEN 1: LOBBY & TICKET SELECTION -->
+    <!-- SCREEN 1: PRE-GAME LOBBY -->
     <div id="screen-lobby" style="display: flex; flex-direction: column; height: 100%;">
         <div class="top-nav">
             <div class="user-balance">
@@ -104,18 +458,18 @@
         <div class="banner-box">
             <div>
                 <div class="pool-title">ደራሽ</div>
-                <div class="pool-amount">1024 ETB</div>
+                <div class="pool-amount" id="lobby-pool">1024 ETB</div>
             </div>
             <div class="timer-box">
                 <div class="timer-label">ጨዋታው ሊጀምር ነው</div>
-                <div class="timer-count">00:17</div>
+                <div class="timer-count" id="lobby-timer">00:17</div>
             </div>
         </div>
 
         <div class="selection-container">
             <div class="selection-header">
                 <span>ካርቴላ ይምረጡ (10 ብር)</span>
-                <span style="color: var(--accent-gold)">1 <span style="color:var(--text-dim)">/ 4</span></span>
+                <span style="color: var(--accent-gold)"><span id="selected-count">1</span> <span style="color:var(--text-dim)">/ 4</span></span>
             </div>
             <div class="grid-100" id="ticket-grid"></div>
         </div>
@@ -140,21 +494,22 @@
         <div class="action-bar">
             <div class="total-bet">
                 <span class="total-bet-label">አጠቃላይ የመደቡት</span>
-                <span class="total-bet-value">10 ETB</span>
+                <span class="total-bet-value" id="total-bet-val">10 ETB</span>
             </div>
             <div class="live-tag"><div class="live-dot"></div> LIVE</div>
         </div>
     </div>
 
-    <!-- SCREEN 2: ACTIVE GAMEPLAY SLOTS -->
+    <!-- SCREEN 2: GAMEPLAY -->
     <div id="screen-game" class="game-screen">
         <div class="game-header">
             <div style="font-size: 0.8rem; font-weight: bold;">GAME ROUND #198086</div>
+            <div style="color: var(--accent-gold); font-weight: bold; font-size: 0.85rem;">1672 ETB</div>
         </div>
 
         <div class="call-display">
-            <div class="current-ball">4</div>
-            <div class="ball-history">
+            <div class="current-ball" id="current-ball-num">4</div>
+            <div class="ball-history" id="ball-history-list">
                 <div class="mini-ball">B4</div>
                 <div class="mini-ball">I29</div>
                 <div class="mini-ball">B12</div>
@@ -180,26 +535,35 @@
             <div class="slot-box" style="align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem;">SLOT 4</div>
         </div>
 
-        <div class="bingo-btn">BINGO!</div>
+        <div class="bingo-btn active" onclick="alert('BINGO!')">BINGO!</div>
     </div>
 </div>
 
 <script>
-    // Generate 1-100 grid items
+    // Build 1-100 Ticket Grid
     const gridContainer = document.getElementById('ticket-grid');
+    const takenNumbers = [4, 6, 7, 8, 9, 13, 14, 15, 16, 22, 42, 43, 44, 59, 60, 62, 64, 67, 68, 72, 73, 74, 80, 81, 84, 88, 90, 92, 99];
+    let selectedTicket = 97;
+
     for (let i = 1; i <= 100; i++) {
         const btn = document.createElement('div');
         btn.className = 'num-btn';
-        if ([4, 6, 7, 8, 9, 13, 14, 15, 16, 22, 42, 43, 44, 59, 60, 62, 64, 67, 68, 72, 73, 74, 80, 81, 84, 88, 90, 92, 97, 99].includes(i)) {
+        if (takenNumbers.includes(i)) {
             btn.classList.add('taken');
-        } else if (i === 97) {
+        } else if (i === selectedTicket) {
             btn.classList.add('active');
         }
         btn.innerText = i;
+        btn.onclick = () => {
+            if (!btn.classList.contains('taken')) {
+                document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+        };
         gridContainer.appendChild(btn);
     }
 
-    // Toggle between Screen Mode 1 (Lobby) and Screen Mode 2 (Active Game)
+    // Toggle Screen Views
     function toggleScreens() {
         const lobby = document.getElementById('screen-lobby');
         const game = document.getElementById('screen-game');
@@ -211,6 +575,18 @@
             game.style.display = 'flex';
         }
     }
+
+    // Pre-game countdown timer simulation
+    let seconds = 17;
+    const timerElem = document.getElementById('lobby-timer');
+    setInterval(() => {
+        if (seconds > 0) {
+            seconds--;
+            timerElem.innerText = `00:${seconds < 10 ? '0' : ''}${seconds}`;
+        } else {
+            seconds = 50;
+        }
+    }, 1000);
 </script>
 </body>
 </html>
