@@ -1,592 +1,173 @@
-<!DOCTYPE html>
-<html lang="am">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hulu Bingo</title>
-    <style>
-        :root {
-            --bg-main: #0a0d14;
-            --bg-card: #121722;
-            --bg-secondary: #181f2d;
-            --accent-gold: #f5b000;
-            --accent-green: #00e676;
-            --text-white: #ffffff;
-            --text-dim: #7f8a9d;
-            --border-color: #232c3d;
-        }
+// State Management
+const gameState = {
+  activeScreen: 'lobby', // 'lobby' or 'game'
+  selectedTicket: 97,
+  ticketPrice: 10,
+  balance: 5.00,
+  jackpot: 1024,
+  timerSeconds: 17,
+  takenNumbers: [4, 6, 7, 8, 9, 13, 14, 15, 16, 22, 42, 43, 44, 59, 60, 62, 64, 67, 68, 72, 73, 74, 80, 81, 84, 88, 90, 92, 99],
+  
+  // Game round state
+  currentBall: 'B4',
+  calledBalls: ['B4', 'I29', 'B12', 'B5'],
+  
+  // Player's 5x5 card layout [B, I, N, G, O]
+  cardNumbers: [
+    [2, 13, 10, 4, 5],     // B column
+    [28, 21, 25, 30, 23],  // I column
+    [31, 43, '★', 34, 41], // N column (Center FREE)
+    [51, 53, 57, 49, 46],  // G column
+    [75, 74, 68, 71, 69]   // O column
+  ],
+  markedPositions: new Set(['2-2', '0-3', '0-4']) // 'N-center', 'B-4', 'B-5'
+};
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            user-select: none;
-        }
+// 1. Generate the 1-100 Ticket Selection Grid
+function initTicketGrid(gridElementId) {
+  const container = document.getElementById(gridElementId);
+  if (!container) return;
 
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-white);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+  container.innerHTML = '';
+  
+  for (let i = 1; i <= 100; i++) {
+    const btn = document.createElement('div');
+    btn.className = 'num-btn';
+    btn.textContent = i;
 
-        .app-view {
-            width: 100%;
-            max-width: 420px;
-            height: 100vh;
-            max-height: 880px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            background: var(--bg-main);
-            border: 1px solid var(--border-color);
-        }
-
-        /* Top Navigation Header */
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 16px;
-            background: var(--bg-main);
-        }
-
-        .user-balance {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-card);
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .avatar {
-            width: 28px;
-            height: 28px;
-            background: #fff;
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        .balance-text {
-            font-size: 0.65rem;
-            color: var(--text-dim);
-        }
-
-        .balance-val {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: var(--accent-gold);
-        }
-
-        .logo-img {
-            font-weight: 900;
-            font-size: 1.2rem;
-            font-style: italic;
-            color: var(--accent-gold);
-        }
-
-        /* Mode Switch Button */
-        .toggle-btn {
-            position: absolute;
-            top: 12px;
-            right: 120px;
-            background: rgba(245, 176, 0, 0.2);
-            color: var(--accent-gold);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.65rem;
-            border: 1px solid var(--accent-gold);
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 100;
-        }
-
-        /* SCREEN 1: LOBBY */
-        .banner-box {
-            margin: 10px 16px;
-            padding: 14px;
-            background: linear-gradient(180deg, #182030 0%, #0f1420 100%);
-            border-radius: 14px;
-            border: 1px solid var(--accent-gold);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .pool-title {
-            font-size: 0.7rem;
-            color: var(--accent-gold);
-            font-weight: bold;
-        }
-
-        .pool-amount {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--text-white);
-        }
-
-        .timer-box {
-            text-align: right;
-        }
-
-        .timer-label {
-            font-size: 0.65rem;
-            color: var(--text-dim);
-        }
-
-        .timer-count {
-            font-size: 1.4rem;
-            font-weight: 900;
-            color: var(--text-white);
-        }
-
-        .selection-container {
-            flex: 1;
-            padding: 0 16px;
-            overflow-y: auto;
-        }
-
-        .selection-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .grid-100 {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 4px;
-            padding-bottom: 180px;
-        }
-
-        .num-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-white);
-            border-radius: 6px;
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .num-btn.active {
-            background: var(--accent-gold);
-            color: #000;
-            font-weight: bold;
-            border-color: var(--accent-gold);
-        }
-
-        .num-btn.taken {
-            background: #141822;
-            color: #2e3748;
-            border-color: transparent;
-        }
-
-        .bottom-sheet {
-            position: absolute;
-            bottom: 50px;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
-            border-top: 2px solid var(--accent-gold);
-            padding: 12px 16px;
-        }
-
-        .sheet-handle {
-            width: 40px;
-            height: 4px;
-            background: var(--accent-gold);
-            border-radius: 2px;
-            margin: 0 auto 10px auto;
-        }
-
-        .selected-cards-preview {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            margin-bottom: 8px;
-        }
-
-        .mini-card {
-            background: #fff;
-            color: #000;
-            border-radius: 6px;
-            padding: 4px;
-            width: 120px;
-            flex-shrink: 0;
-        }
-
-        .mini-card-header {
-            background: var(--accent-gold);
-            color: #000;
-            font-size: 0.6rem;
-            font-weight: bold;
-            text-align: center;
-            border-radius: 3px;
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            padding: 2px 0;
-        }
-
-        .mini-card-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 1px;
-            font-size: 0.55rem;
-            text-align: center;
-            margin-top: 4px;
-            font-weight: bold;
-        }
-
-        .action-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 16px;
-        }
-
-        .total-bet {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .total-bet-label {
-            font-size: 0.6rem;
-            color: var(--text-dim);
-        }
-
-        .total-bet-value {
-            font-size: 1rem;
-            font-weight: bold;
-            color: var(--text-white);
-        }
-
-        .live-tag {
-            color: var(--accent-green);
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: bold;
-        }
-
-        .live-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--accent-green);
-            border-radius: 50%;
-        }
-
-        /* SCREEN 2: GAMEPLAY */
-        .game-screen {
-            display: none;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-main);
-        }
-
-        .game-header {
-            background: var(--bg-card);
-            padding: 10px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .call-display {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 12px 16px;
-        }
-
-        .current-ball {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #ffffff;
-            color: #000;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            border: 3px solid #b8c4d0;
-            box-shadow: 0 0 10px rgba(255,255,255,0.2);
-        }
-
-        .ball-history {
-            display: flex;
-            gap: 6px;
-            background: var(--bg-card);
-            padding: 6px 10px;
-            border-radius: 20px;
-            flex: 1;
-            border: 1px solid var(--border-color);
-            overflow-x: auto;
-        }
-
-        .mini-ball {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: #232c3d;
-            color: var(--accent-gold);
-            font-size: 0.65rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .slots-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 8px;
-            padding: 0 16px;
-            flex: 1;
-            margin-bottom: 70px;
-        }
-
-        .slot-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-table {
-            width: 100%;
-            height: 100%;
-            border-collapse: collapse;
-            font-size: 0.75rem;
-            text-align: center;
-        }
-
-        .card-table th {
-            background: var(--accent-gold);
-            color: #000;
-            padding: 4px 0;
-            font-weight: bold;
-        }
-
-        .card-table td {
-            border: 1px solid #232c3d;
-            color: #fff;
-            font-weight: 600;
-            width: 20%;
-        }
-
-        .card-table td.marked {
-            background: var(--accent-green);
-            color: #000;
-            border-radius: 50%;
-            font-weight: 900;
-        }
-
-        .bingo-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 16px;
-            left: 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-dim);
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-align: center;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .bingo-btn.active {
-            background: var(--accent-green);
-            color: #000;
-        }
-    </style>
-</head>
-<body>
-
-<div class="app-view">
-    <button class="toggle-btn" onclick="toggleScreens()">ቅይር (Switch View)</button>
-
-    <!-- SCREEN 1: PRE-GAME LOBBY -->
-    <div id="screen-lobby" style="display: flex; flex-direction: column; height: 100%;">
-        <div class="top-nav">
-            <div class="user-balance">
-                <div class="avatar">P</div>
-                <div>
-                    <div class="balance-text">ዋና ሂሳብ</div>
-                    <div class="balance-val">5.00</div>
-                </div>
-            </div>
-            <div class="logo-img">ሁሉቢንጎ</div>
-        </div>
-
-        <div class="banner-box">
-            <div>
-                <div class="pool-title">ደራሽ</div>
-                <div class="pool-amount" id="lobby-pool">1024 ETB</div>
-            </div>
-            <div class="timer-box">
-                <div class="timer-label">ጨዋታው ሊጀምር ነው</div>
-                <div class="timer-count" id="lobby-timer">00:17</div>
-            </div>
-        </div>
-
-        <div class="selection-container">
-            <div class="selection-header">
-                <span>ካርቴላ ይምረጡ (10 ብር)</span>
-                <span style="color: var(--accent-gold)"><span id="selected-count">1</span> <span style="color:var(--text-dim)">/ 4</span></span>
-            </div>
-            <div class="grid-100" id="ticket-grid"></div>
-        </div>
-
-        <div class="bottom-sheet">
-            <div class="sheet-handle"></div>
-            <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">የመረጡት ካርቴላዎች</div>
-            <div class="selected-cards-preview">
-                <div class="mini-card">
-                    <div class="mini-card-header"><span>B</span><span>I</span><span>N</span><span>G</span><span>O</span></div>
-                    <div class="mini-card-grid">
-                        <span>2</span><span>28</span><span>31</span><span>51</span><span>75</span>
-                        <span>13</span><span>21</span><span>43</span><span>53</span><span>74</span>
-                        <span>10</span><span>25</span><span>★</span><span>57</span><span>68</span>
-                        <span>4</span><span>30</span><span>34</span><span>49</span><span>71</span>
-                        <span>5</span><span>23</span><span>41</span><span>46</span><span>69</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="action-bar">
-            <div class="total-bet">
-                <span class="total-bet-label">አጠቃላይ የመደቡት</span>
-                <span class="total-bet-value" id="total-bet-val">10 ETB</span>
-            </div>
-            <div class="live-tag"><div class="live-dot"></div> LIVE</div>
-        </div>
-    </div>
-
-    <!-- SCREEN 2: GAMEPLAY -->
-    <div id="screen-game" class="game-screen">
-        <div class="game-header">
-            <div style="font-size: 0.8rem; font-weight: bold;">GAME ROUND #198086</div>
-            <div style="color: var(--accent-gold); font-weight: bold; font-size: 0.85rem;">1672 ETB</div>
-        </div>
-
-        <div class="call-display">
-            <div class="current-ball" id="current-ball-num">4</div>
-            <div class="ball-history" id="ball-history-list">
-                <div class="mini-ball">B4</div>
-                <div class="mini-ball">I29</div>
-                <div class="mini-ball">B12</div>
-                <div class="mini-ball">B5</div>
-            </div>
-        </div>
-
-        <div class="slots-grid">
-            <div class="slot-box">
-                <table class="card-table">
-                    <thead><tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr></thead>
-                    <tbody>
-                        <tr><td>2</td><td>28</td><td>31</td><td>51</td><td>75</td></tr>
-                        <tr><td>13</td><td>21</td><td>43</td><td>53</td><td>74</td></tr>
-                        <tr><td>10</td><td>25</td><td class="marked">★</td><td>57</td><td>68</td></tr>
-                        <tr><td class="marked">4</td><td>30</td><td>34</td><td>49</td><td>71</td></tr>
-                        <tr><td class="marked">5</td><td>23</td><td>41</td><td>46</td><td>69</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="slot-box" style="align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem;">SLOT 2</div>
-            <div class="slot-box" style="align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem;">SLOT 3</div>
-            <div class="slot-box" style="align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem;">SLOT 4</div>
-        </div>
-
-        <div class="bingo-btn active" onclick="alert('BINGO!')">BINGO!</div>
-    </div>
-</div>
-
-<script>
-    // Build 1-100 Ticket Grid
-    const gridContainer = document.getElementById('ticket-grid');
-    const takenNumbers = [4, 6, 7, 8, 9, 13, 14, 15, 16, 22, 42, 43, 44, 59, 60, 62, 64, 67, 68, 72, 73, 74, 80, 81, 84, 88, 90, 92, 99];
-    let selectedTicket = 97;
-
-    for (let i = 1; i <= 100; i++) {
-        const btn = document.createElement('div');
-        btn.className = 'num-btn';
-        if (takenNumbers.includes(i)) {
-            btn.classList.add('taken');
-        } else if (i === selectedTicket) {
-            btn.classList.add('active');
-        }
-        btn.innerText = i;
-        btn.onclick = () => {
-            if (!btn.classList.contains('taken')) {
-                document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            }
-        };
-        gridContainer.appendChild(btn);
+    if (gameState.takenNumbers.includes(i)) {
+      btn.classList.add('taken');
+    } else if (i === gameState.selectedTicket) {
+      btn.classList.add('active');
     }
 
-    // Toggle Screen Views
-    function toggleScreens() {
-        const lobby = document.getElementById('screen-lobby');
-        const game = document.getElementById('screen-game');
-        if (lobby.style.display === 'none') {
-            lobby.style.display = 'flex';
-            game.style.display = 'none';
-        } else {
-            lobby.style.display = 'none';
-            game.style.display = 'flex';
-        }
+    btn.onclick = () => selectTicket(i, btn);
+    container.appendChild(btn);
+  }
+}
+
+// 2. Select / Deselect a Card
+function selectTicket(ticketNumber, element) {
+  if (gameState.takenNumbers.includes(ticketNumber)) return;
+
+  gameState.selectedTicket = ticketNumber;
+
+  // Update UI active state
+  document.querySelectorAll('.num-btn').forEach(btn => btn.classList.remove('active'));
+  element.classList.add('active');
+
+  updateLobbyUI();
+}
+
+// 3. Screen Switcher
+function switchView(targetScreen) {
+  const lobbyScreen = document.getElementById('screen-lobby');
+  const gameScreen = document.getElementById('screen-game');
+
+  gameState.activeScreen = targetScreen || (gameState.activeScreen === 'lobby' ? 'game' : 'lobby');
+
+  if (gameState.activeScreen === 'game') {
+    lobbyScreen.style.display = 'none';
+    gameScreen.style.display = 'flex';
+  } else {
+    lobbyScreen.style.display = 'flex';
+    gameScreen.style.display = 'none';
+  }
+}
+
+// 4. Pre-Game Timer System
+function startLobbyTimer(timerElementId) {
+  const timerElem = document.getElementById(timerElementId);
+  
+  setInterval(() => {
+    if (gameState.timerSeconds > 0) {
+      gameState.timerSeconds--;
+    } else {
+      gameState.timerSeconds = 30; // Reset countdown loop
+    }
+    
+    if (timerElem) {
+      const secs = gameState.timerSeconds;
+      timerElem.textContent = `00:${secs < 10 ? '0' : ''}${secs}`;
+    }
+  }, 1000);
+}
+
+// 5. Drawing and Marking Bingo Balls
+function drawNextBall() {
+  const letters = ['B', 'I', 'N', 'G', 'O'];
+  const letter = letters[Math.floor(Math.random() * letters.length)];
+  let number;
+
+  switch (letter) {
+    case 'B': number = Math.floor(Math.random() * 15) + 1; break;
+    case 'I': number = Math.floor(Math.random() * 15) + 16; break;
+    case 'N': number = Math.floor(Math.random() * 15) + 31; break;
+    case 'G': number = Math.floor(Math.random() * 15) + 46; break;
+    case 'O': number = Math.floor(Math.random() * 15) + 61; break;
+  }
+
+  const ballCode = `${letter}${number}`;
+  gameState.currentBall = ballCode;
+  gameState.calledBalls.unshift(ballCode);
+
+  updateGameplayUI();
+}
+
+// 6. Check for Winning Line (Bingo)
+function checkBingo() {
+  const grid = gameState.markedPositions;
+  
+  // Check Columns & Rows
+  for (let i = 0; i < 5; i++) {
+    let colComplete = true;
+    let rowComplete = true;
+    
+    for (let j = 0; j < 5; j++) {
+      if (!grid.has(`${i}-${j}`)) colComplete = false;
+      if (!grid.has(`${j}-${i}`)) rowComplete = false;
     }
 
-    // Pre-game countdown timer simulation
-    let seconds = 17;
-    const timerElem = document.getElementById('lobby-timer');
-    setInterval(() => {
-        if (seconds > 0) {
-            seconds--;
-            timerElem.innerText = `00:${seconds < 10 ? '0' : ''}${seconds}`;
-        } else {
-            seconds = 50;
-        }
-    }, 1000);
-</script>
-</body>
-</html>
+    if (colComplete || rowComplete) return true;
+  }
+
+  // Check Diagonals
+  let diag1 = true;
+  let diag2 = true;
+  for (let i = 0; i < 5; i++) {
+    if (!grid.has(`${i}-${i}`)) diag1 = false;
+    if (!grid.has(`${i}-${4 - i}`)) diag2 = false;
+  }
+
+  return diag1 || diag2;
+}
+
+// UI Sync Helpers
+function updateLobbyUI() {
+  const countElem = document.getElementById('selected-count');
+  const betElem = document.getElementById('total-bet-val');
+  
+  if (countElem) countElem.textContent = gameState.selectedTicket ? 1 : 0;
+  if (betElem) betElem.textContent = `${gameState.selectedTicket ? gameState.ticketPrice : 0} ETB`;
+}
+
+function updateGameplayUI() {
+  const currentBallElem = document.getElementById('current-ball-num');
+  const historyElem = document.getElementById('ball-history-list');
+
+  if (currentBallElem) {
+    currentBallElem.textContent = gameState.currentBall.replace(/^[A-Z]/, '');
+  }
+
+  if (historyElem) {
+    historyElem.innerHTML = gameState.calledBalls
+      .map(ball => `<div class="mini-ball">${ball}</div>`)
+      .join('');
+  }
+}
+
+// Initialize scripts on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initTicketGrid('ticket-grid');
+  startLobbyTimer('lobby-timer');
+});
