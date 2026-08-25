@@ -1,781 +1,1566 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { Users, Trophy, Sparkles, Wifi } from "lucide-react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Bingo</title>
 
-const COLUMNS = [
-  { letter: "B", min: 1, max: 15, color: "#FF5470" },
-  { letter: "I", min: 16, max: 30, color: "#FFB648" },
-  { letter: "N", min: 31, max: 45, color: "#2FD9A8" },
-  { letter: "G", min: 46, max: 60, color: "#4E9BFF" },
-  { letter: "O", min: 61, max: 75, color: "#B57BFF" },
-];
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
 
-const BOARD_COUNT = 250;
-const LOBBY_SECONDS = 50;
-const CALL_SECONDS = 1.5;
-const MAX_CALLS = 75;
-const CALL_PHASE_SECONDS = Math.ceil(MAX_CALLS * CALL_SECONDS);
-const ROUND_SECONDS = LOBBY_SECONDS + CALL_PHASE_SECONDS;
-const ROUND_MS = ROUND_SECONDS * 1000;
-const LOBBY_MS = LOBBY_SECONDS * 1000;
-const CALL_MS = CALL_SECONDS * 1000;
-const STAKE = 20;
-const STARTING_BALANCE = 40;
-const MAX_BOARDS_PER_PLAYER = 4;
-const POLL_MS = 2000;
+:root{
+  --bg:#071a2e;
+  --bg2:#102b4d;
+  --panel:#f5f6fa;
+  --text:#182235;
+  --muted:#8f99ad;
+  --blue:#5867e8;
+  --cyan:#28d6b0;
+  --white:#ffffff;
+}
 
-function letterFor(n) {
-  const c = COLUMNS.find((c) => n >= c.min && n <= c.max);
-  return c ? c.letter : "";
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top,#19345c 0%,#071a2e 55%,#061426 100%);
+  color:white;
+  font-family:'Space Mono',monospace;
+  padding:25px 12px 50px;
 }
-function colorFor(n) {
-  const c = COLUMNS.find((c) => n >= c.min && n <= c.max);
-  return c ? c.color : "#888";
+
+.app{
+  width:100%;
+  max-width:760px;
+  margin:auto;
 }
-function mulberry32(seed) {
-  let t = seed >>> 0;
-  return function () {
-    t += 0x6d2b79f5;
-    let r = Math.imul(t ^ (t >>> 15), 1 | t);
-    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
+
+.logo{
+  text-align:center;
+  margin:10px 0 5px;
 }
-function shuffleWithRng(arr, rng) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+
+.logo h1{
+  margin:0;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.5rem,12vw,6rem);
+  letter-spacing:.05em;
+  color:var(--cyan);
+}
+
+.subtitle{
+  text-align:center;
+  color:#9aa5bb;
+  letter-spacing:.15em;
+  font-size:.8rem;
+  margin-bottom:20px;
+}
+
+/* BALANCE */
+.balance-box{
+  width:max-content;
+  max-width:100%;
+  margin:0 auto 25px;
+  padding:10px 20px;
+  border:1px solid rgba(40,214,176,.35);
+  border-radius:15px;
+  background:rgba(255,255,255,.08);
+  text-align:center;
+}
+
+.balance-label{
+  color:#9aa5bb;
+  font-size:.7rem;
+  letter-spacing:.08em;
+}
+
+.balance-value{
+  color:var(--cyan);
+  font-size:1.2rem;
+  font-weight:bold;
+  margin-top:3px;
+}
+
+.screen{display:none}
+.screen.active{display:block}
+
+.rooms{
+  display:grid;
+  gap:16px;
+}
+
+.room{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;
+  padding:22px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.room:hover{
+  transform:translateY(-2px);
+  border-color:var(--cyan);
+}
+
+.room-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.room-title h2{
+  margin:0;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2rem;
+  color:white;
+  letter-spacing:.05em;
+}
+
+.room-price{
+  color:var(--cyan);
+  font-size:1.3rem;
+  font-weight:bold;
+}
+
+.room-info{
+  margin-top:15px;
+  color:#aeb8ca;
+  font-size:.75rem;
+  line-height:1.8;
+}
+
+.stats{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:22px;
+  margin:15px 0 22px;
+  font-size:.75rem;
+  color:#aab4c7;
+}
+
+.stats b{
+  color:var(--cyan);
+}
+
+.timer{
+  text-align:center;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.3rem;
+  color:var(--cyan);
+  margin-bottom:12px;
+}
+
+.panel{
+  background:var(--panel);
+  color:var(--text);
+  border-radius:25px;
+  padding:25px 15px 20px;
+  overflow:hidden;
+}
+
+.panel-title{
+  text-align:center;
+  font-family:'Bebas Neue',sans-serif;
+  color:var(--blue);
+  font-size:2.4rem;
+  letter-spacing:.08em;
+  margin-bottom:20px;
+}
+
+.search{
+  display:block;
+  width:90%;
+  max-width:340px;
+  margin:0 auto 22px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid #d8dce5;
+  background:white;
+  text-align:center;
+  font-family:'Space Mono',monospace;
+  font-size:1rem;
+  outline:none;
+}
+
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  max-height:560px;
+  overflow-y:auto;
+  padding:4px;
+}
+
+.card-choice{
+  min-height:64px;
+  border:1px solid #d8dce5;
+  border-radius:15px;
+  background:#fff;
+  color:#182235;
+  font-family:'Space Mono',monospace;
+  font-weight:bold;
+  font-size:.95rem;
+  cursor:pointer;
+}
+
+.card-choice:hover{
+  border-color:var(--blue);
+}
+
+.card-choice.selected{
+  background:var(--blue);
+  color:white;
+  border-color:var(--blue);
+}
+
+.card-choice.taken{
+  background:#c8ccd5;
+  color:#777;
+  cursor:not-allowed;
+}
+
+.selection-info{
+  text-align:center;
+  margin-top:17px;
+  color:#777f91;
+  font-size:.75rem;
+}
+
+.start-game{
+  display:block;
+  width:100%;
+  margin-top:18px;
+  padding:15px;
+  border:0;
+  border-radius:14px;
+  background:var(--cyan);
+  color:#082039;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;
+  cursor:pointer;
+}
+
+.start-game:disabled{
+  opacity:.4;
+}
+
+.caller{
+  text-align:center;
+}
+
+.ball-ring{
+  width:190px;
+  height:190px;
+  margin:20px auto;
+  border:7px solid var(--cyan);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 35px rgba(40,214,176,.15);
+}
+
+.ball{
+  width:135px;
+  height:135px;
+  background:#f7f8fb;
+  color:#182235;
+  border-radius:50%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+.ball-letter{
+  color:var(--blue);
+  font-size:1.4rem;
+  font-weight:bold;
+}
+
+.ball-number{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:3.5rem;
+  line-height:1;
+}
+
+.next-call{
+  color:#929db1;
+  font-size:.8rem;
+  margin:15px 0;
+}
+
+.called{
+  color:#aab4c7;
+  font-size:.72rem;
+  margin-bottom:30px;
+}
+
+.bingo-card{
+  background:var(--panel);
+  color:var(--text);
+  border-radius:25px;
+  padding:20px 12px;
+}
+
+.bingo-header{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.bingo-header div{
+  font-family:'Bebas Neue',sans-serif;
+  color:var(--blue);
+  font-size:2.2rem;
+}
+
+.bingo-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+}
+
+.cell{
+  aspect-ratio:1;
+  border:1px solid #d9dce4;
+  border-radius:12px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:.85rem;
+  position:relative;
+}
+
+.cell.marked{
+  background:var(--blue);
+  color:white;
+}
+
+.cell.free{
+  background:#e8ebff;
+  color:var(--blue);
+}
+
+.win{
+  text-align:center;
+  color:var(--cyan);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.5rem;
+  margin-top:18px;
+}
+
+.prize{
+  text-align:center;
+  color:var(--text);
+  font-weight:bold;
+  margin-top:8px;
+}
+
+.back{
+  display:block;
+  margin:20px auto 0;
+  padding:12px 25px;
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:12px;
+  background:transparent;
+  color:white;
+  cursor:pointer;
+}
+
+@media(max-width:500px){
+  body{padding:15px 8px 35px}
+
+  .logo h1{
+    font-size:4rem;
   }
-  return a;
-}
-function callSequenceFor(roundId) {
-  const rng = mulberry32(roundId + 1);
-  return shuffleWithRng(
-    Array.from({ length: 75 }, (_, i) => i + 1),
-    rng
-  );
-}
-function cardFor(roundId, boardId) {
-  const rng = mulberry32(roundId * 100000 + boardId + 7);
-  const cols = COLUMNS.map((c) => {
-    const range = [];
-    for (let n = c.min; n <= c.max; n++) range.push(n);
-    return shuffleWithRng(range, rng).slice(0, 5);
-  });
-  const grid = [];
-  for (let r = 0; r < 5; r++) {
-    const row = [];
-    for (let c = 0; c < 5; c++) row.push(r === 2 && c === 2 ? "FREE" : cols[c][r]);
-    grid.push(row);
+
+  .panel{
+    padding:20px 8px;
   }
-  return grid;
-}
-function checkWin(grid, calledSet) {
-  const key = (r, c) => `${r}-${c}`;
-  const isHit = (r, c) => grid[r][c] === "FREE" || calledSet.has(grid[r][c]);
-  for (let r = 0; r < 5; r++)
-    if ([0, 1, 2, 3, 4].every((c) => isHit(r, c))) return [0, 1, 2, 3, 4].map((c) => key(r, c));
-  for (let c = 0; c < 5; c++)
-    if ([0, 1, 2, 3, 4].every((r) => isHit(r, c))) return [0, 1, 2, 3, 4].map((r) => key(r, c));
-  if ([0, 1, 2, 3, 4].every((i) => isHit(i, i))) return [0, 1, 2, 3, 4].map((i) => key(i, i));
-  if ([0, 1, 2, 3, 4].every((i) => isHit(i, 4 - i))) return [0, 1, 2, 3, 4].map((i) => key(i, 4 - i));
-  return null;
-}
-function randomId() {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-}
-async function storageGet(key, shared) {
-  try {
-    const r = await window.storage.get(key, shared);
-    return r && r.value ? JSON.parse(r.value) : null;
-  } catch (e) {
-    return null;
+
+  .card-grid{
+    gap:7px;
+  }
+
+  .card-choice{
+    min-height:58px;
+    font-size:.8rem;
+  }
+
+  .bingo-card{
+    padding:17px 7px;
+  }
+
+  .bingo-grid,
+  .bingo-header{
+    gap:5px;
+  }
+
+  .cell{
+    border-radius:9px;
+    font-size:.72rem;
+  }
+
+  .ball-ring{
+    width:165px;
+    height:165px;
+  }
+
+  .ball{
+    width:120px;
+    height:120px;
   }
 }
-async function storageSet(key, value, shared) {
-  try {
-    await window.storage.set(key, JSON.stringify(value), shared);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
+</style>
+</head>
 
-export default function LuckyBingo() {
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
-  const [nameInput, setNameInput] = useState("");
-  const [now, setNow] = useState(Date.now());
-  const [boardsMap, setBoardsMap] = useState({});
-  const [winner, setWinner] = useState(null);
-  const [selectedBoards, setSelectedBoards] = useState([]);
-  const [marked, setMarked] = useState(new Set());
-  const [autoBingo, setAutoBingo] = useState(false);
-  const [toast, setToast] = useState(null);
+<body>
 
-  const stakedRoundRef = useRef(null);
-  const claimedRoundRef = useRef(null);
-  const autoJoinRoundRef = useRef(null);
-  const roundIdRef = useRef(null);
-  const toastTimerRef = useRef(null);
+<div class="app">
 
-  function showToast(msg) {
-    setToast(msg);
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
-  }
+  <div class="logo">
+    <h1>LUCKY BINGO</h1>
+  </div>
 
-  useEffect(() => {
-    (async () => {
-      const p = await storageGet("profile", false);
-      if (p) setProfile(p);
-      setLoading(false);
-    })();
-  }, []);
+  <div class="subtitle">
+    ROOMS · LIVE CARDS
+  </div>
 
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, []);
+  <!-- BALANCE -->
+  <div class="balance-box">
+    <div class="balance-label">BALANCE</div>
+    <div class="balance-value" id="balance">0 ETB</div>
+  </div>
 
-  const roundId = Math.floor(now / ROUND_MS);
-  const roundStart = roundId * ROUND_MS;
-  const elapsed = now - roundStart;
-  const phase = elapsed < LOBBY_MS ? "lobby" : "calling";
-  const lobbyRemaining = Math.max(0, Math.ceil((LOBBY_MS - elapsed) / 1000));
-  const callElapsed = Math.max(0, elapsed - LOBBY_MS);
-  const callIndex = phase === "calling" ? Math.min(MAX_CALLS - 1, Math.floor(callElapsed / CALL_MS)) : -1;
 
-  const sequence = useMemo(() => callSequenceFor(roundId), [roundId]);
-  const calledNumbers = phase === "calling" ? sequence.slice(0, callIndex + 1) : [];
-  const calledSet = useMemo(() => new Set(calledNumbers), [calledNumbers.length, roundId]);
-  const currentNumber = calledNumbers[calledNumbers.length - 1];
-  const cards = useMemo(
-    () => selectedBoards.map((id) => ({ id, grid: cardFor(roundId, id) })),
-    [roundId, selectedBoards]
-  );
-  const boardsTakenCount = Object.keys(boardsMap).length;
-  const distinctPlayers = useMemo(
-    () => new Set(Object.values(boardsMap).map((v) => v.id)).size,
-    [boardsMap]
-  );
+  <!-- ROOMS -->
+  <div class="screen active" id="roomsScreen">
 
-  const adjustBalance = useCallback((delta) => {
-    setProfile((prev) => {
-      if (!prev) return prev;
-      const updated = { ...prev, balance: Math.max(0, prev.balance + delta) };
-      storageSet("profile", updated, false);
-      return updated;
-    });
-  }, []);
+    <div class="rooms">
 
-  // reset per-round local state when the round changes
-  useEffect(() => {
-    if (roundIdRef.current === roundId) return;
-    roundIdRef.current = roundId;
-    setMarked(new Set());
-    setWinner(null);
-    setSelectedBoards([]);
-    setBoardsMap({});
-    stakedRoundRef.current = null;
-    claimedRoundRef.current = null;
-    autoJoinRoundRef.current = null;
-  }, [roundId]);
+      <div class="room" onclick="openRoom(20)">
+        <div class="room-title">
+          <h2>20 ETB PLAY</h2>
+          <div class="room-price">20 ETB</div>
+        </div>
 
-  // poll shared state
-  useEffect(() => {
-    if (!profile) return;
-    let cancelled = false;
-    async function poll() {
-      const [bm, win] = await Promise.all([
-        storageGet(`round:${roundId}:boards`, true),
-        storageGet(`round:${roundId}:winner`, true),
-      ]);
-      if (cancelled) return;
-      if (bm) {
-        setBoardsMap(bm);
-        const mine = Object.entries(bm)
-          .filter(([, v]) => v.id === profile.id)
-          .map(([k]) => Number(k));
-        setSelectedBoards(mine);
-      }
-      if (win) setWinner(win);
-    }
-    poll();
-    const t = setInterval(poll, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, [roundId, profile]);
-
-  // deduct stake once per board when round moves into calling phase
-  useEffect(() => {
-    if (!profile || phase !== "calling" || selectedBoards.length === 0) return;
-    if (stakedRoundRef.current === roundId) return;
-    stakedRoundRef.current = roundId;
-    adjustBalance(-STAKE * selectedBoards.length);
-  }, [phase, selectedBoards, roundId, profile, adjustBalance]);
-
-  // auto-mark called numbers when Auto Bingo is on
-  useEffect(() => {
-    if (!autoBingo || cards.length === 0) return;
-    setMarked((m) => {
-      let changed = false;
-      const next = new Set(m);
-      calledNumbers.forEach((n) => {
-        if (!next.has(n)) {
-          next.add(n);
-          changed = true;
-        }
-      });
-      return changed ? next : m;
-    });
-  }, [calledNumbers.length, autoBingo, cards.length]);
-
-  const activeSet = autoBingo ? calledSet : marked;
-  const winningCard = useMemo(() => {
-    if (phase !== "calling") return null;
-    for (const c of cards) {
-      const cells = checkWin(c.grid, activeSet);
-      if (cells) return { boardId: c.id, cells };
-    }
-    return null;
-  }, [cards, activeSet, phase]);
-
-  const claimWin = useCallback(
-    async (target) => {
-      const win = target || winningCard;
-      if (!profile || !win) return;
-      if (claimedRoundRef.current === roundId) return;
-      claimedRoundRef.current = roundId;
-      const existing = await storageGet(`round:${roundId}:winner`, true);
-      if (existing) {
-        setWinner(existing);
-        return;
-      }
-      const payout = Math.max(STAKE * 2, Math.round(STAKE * boardsTakenCount * 0.72));
-      const payload = { id: profile.id, name: profile.name, boardId: win.boardId, payout, ts: Date.now() };
-      const ok = await storageSet(`round:${roundId}:winner`, payload, true);
-      if (ok) {
-        setWinner(payload);
-        adjustBalance(payout);
-      }
-    },
-    [profile, winningCard, roundId, boardsTakenCount, adjustBalance]
-  );
-
-  useEffect(() => {
-    if (winningCard && autoBingo && !winner) claimWin(winningCard);
-  }, [winningCard, autoBingo, winner, claimWin]);
-
-  async function pickBoard(id) {
-    if (!profile || phase !== "lobby") return;
-    const owner = boardsMap[id];
-    if (owner && owner.id !== profile.id) return;
-    let newMap = { ...boardsMap };
-    if (owner && owner.id === profile.id) {
-      delete newMap[id];
-    } else {
-      if (selectedBoards.length >= MAX_BOARDS_PER_PLAYER) {
-        showToast(`You can pick up to ${MAX_BOARDS_PER_PLAYER} boards`);
-        return;
-      }
-      newMap[id] = { id: profile.id, name: profile.name };
-    }
-    setBoardsMap(newMap);
-    const mine = Object.entries(newMap)
-      .filter(([, v]) => v.id === profile.id)
-      .map(([k]) => Number(k));
-    setSelectedBoards(mine);
-    const ok = await storageSet(`round:${roundId}:boards`, newMap, true);
-    if (!ok) showToast("Couldn't reach shared game state — check your connection");
-  }
-
-  function toggleMark(n) {
-    if (autoBingo || !calledSet.has(n)) return;
-    setMarked((m) => {
-      const next = new Set(m);
-      next.has(n) ? next.delete(n) : next.add(n);
-      return next;
-    });
-  }
-
-  async function startProfile() {
-    const p = {
-      id: randomId(),
-      name: nameInput.trim() || `Player${Math.floor(Math.random() * 900 + 100)}`,
-      balance: STARTING_BALANCE,
-    };
-    await storageSet("profile", p, false);
-    setProfile(p);
-  }
-
-  if (loading) {
-    return (
-      <div style={styles.app}>
-        <div style={{ margin: "auto", color: "#7C8AB0" }}>Loading…</div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div style={styles.app}>
-        <FontImport />
-        <div style={{ margin: "auto", padding: 24, width: "100%", maxWidth: 340 }}>
-          <div className="display" style={{ ...styles.logo, justifyContent: "center", marginBottom: 6 }}>
-            <Sparkles size={22} color="#F4B740" style={{ marginRight: 8 }} />
-            Lucky Bingo
-          </div>
-          <div style={{ color: "#7C8AB0", fontSize: 13, textAlign: "center", marginBottom: 22 }}>
-            Real shared rounds — anyone with this game open plays the same round as you.
-          </div>
-          <div style={{ color: "#7C8AB0", fontSize: 12, marginBottom: 6 }}>Pick a display name</div>
-          <input
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            placeholder="e.g. Abel"
-            style={styles.input}
-            maxLength={16}
-          />
-          <button onClick={startProfile} style={styles.playAgainBtn}>
-            Start playing
-          </button>
-          <div style={{ color: "#4A567E", fontSize: 11, marginTop: 12, textAlign: "center" }}>
-            Your name and board picks are visible to other players in this game.
-          </div>
+        <div class="room-info">
+          Players: <b id="room20Players">0</b><br>
+          Cards Taken: <b id="room20Cards">0</b><br>
+          Prize: <b id="room20Prize">0 ETB</b>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div style={styles.app}>
-      <FontImport />
-      {phase === "lobby" && (
-        <Lobby
-          profile={profile}
-          boardsMap={boardsMap}
-          selectedBoards={selectedBoards}
-          onPick={pickBoard}
-          distinctPlayers={distinctPlayers}
-          boardsTakenCount={boardsTakenCount}
-          lobbyRemaining={lobbyRemaining}
-        />
-      )}
-      {phase === "calling" && (
-        <GameScreen
-          profile={profile}
-          distinctPlayers={distinctPlayers}
-          currentNumber={currentNumber}
-          calledNumbers={calledNumbers}
-          cards={cards}
-          calledSet={calledSet}
-          marked={marked}
-          autoBingo={autoBingo}
-          setAutoBingo={setAutoBingo}
-          onCellTap={toggleMark}
-          winningCard={winner ? null : winningCard}
-          onClaim={claimWin}
-        />
-      )}
-      {winner && (
-        <WinOverlay
-          winner={winner}
-          myId={profile.id}
-          cards={cards}
-          calledSet={calledSet}
-          secondsToNextRound={Math.max(0, Math.ceil((ROUND_MS - elapsed) / 1000))}
-        />
-      )}
-      {toast && (
-        <div style={styles.toast} onClick={() => setToast(null)}>
-          {toast}
+      <div class="room" onclick="openRoom(40)">
+        <div class="room-title">
+          <h2>40 ETB PLAY</h2>
+          <div class="room-price">40 ETB</div>
         </div>
-      )}
-    </div>
-  );
-}
 
-function FontImport() {
-  return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
-      * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-      .display { font-family: 'Baloo 2', sans-serif; }
-      @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(244,183,64,0.55);} 70% { box-shadow: 0 0 0 18px rgba(244,183,64,0);} 100% { box-shadow: 0 0 0 0 rgba(244,183,64,0);} }
-      @keyframes softGlow { 0%,100% { filter: drop-shadow(0 0 6px currentColor);} 50% { filter: drop-shadow(0 0 16px currentColor);} }
-      @keyframes popIn { 0% { transform: scale(0.4); opacity: 0;} 70% { transform: scale(1.12); opacity: 1;} 100% { transform: scale(1);} }
-      @keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1;} 100% { transform: translateY(420px) rotate(360deg); opacity: 0;} }
-      @keyframes bingoBtnPulse { 0%,100% { transform: scale(1);} 50% { transform: scale(1.04);} }
-      .cell-pop { animation: popIn 0.35s ease-out; }
-      .confetti { position: absolute; top: 0; animation: fall linear forwards; }
-    `}</style>
-  );
-}
-
-function TopBar({ players, right }) {
-  return (
-    <div style={styles.topBar}>
-      <div style={styles.pill}>
-        <Users size={15} color="#7C8AB0" />
-        <span style={{ marginLeft: 6, fontWeight: 700 }}>{players}</span>
-      </div>
-      <div style={styles.pill}>
-        <Wifi size={13} color="#2FD9A8" />
-        <span style={{ marginLeft: 6, fontSize: 11, color: "#2FD9A8", fontWeight: 700 }}>LIVE</span>
-      </div>
-      <div style={styles.walletPill}>
-        <span style={{ fontWeight: 800, color: "#0A0E1A" }}>{right} Br</span>
-      </div>
-    </div>
-  );
-}
-
-function Lobby({ profile, boardsMap, selectedBoards, onPick, distinctPlayers, boardsTakenCount, lobbyRemaining }) {
-  return (
-    <div style={styles.screen}>
-      <Header title="Lucky Bingo" subtitle={`hey ${profile.name} — real players, shared round`} />
-      <TopBar players={distinctPlayers} right={profile.balance} />
-
-      <div style={styles.countdownWrap}>
-        <div style={{ color: "#7C8AB0", fontSize: 12, marginBottom: 4 }}>Round starts in</div>
-        <div className="display" style={{ fontSize: 30, color: "#F4B740", fontWeight: 800 }}>
-          {lobbyRemaining}s
-        </div>
-        <div style={styles.progressTrack}>
-          <div style={{ ...styles.progressFill, width: `${(lobbyRemaining / LOBBY_SECONDS) * 100}%` }} />
+        <div class="room-info">
+          Players: <b id="room40Players">0</b><br>
+          Cards Taken: <b id="room40Cards">0</b><br>
+          Prize: <b id="room40Prize">0 ETB</b>
         </div>
       </div>
 
-      <div style={styles.sectionLabel}>Stake</div>
-      <div style={{ padding: "0 16px" }}>
-        <div style={styles.stakeFixed}>{STAKE} Br per board</div>
-      </div>
-
-      <div style={styles.sectionLabel}>
-        Choose up to {MAX_BOARDS_PER_PLAYER} boards &middot; {boardsTakenCount}/{BOARD_COUNT} taken
-      </div>
-      <div style={styles.boardGrid}>
-        {Array.from({ length: BOARD_COUNT }, (_, i) => i + 1).map((id) => {
-          const owner = boardsMap[id];
-          const isMe = selectedBoards.includes(id);
-          const disabled = owner && !isMe;
-          return (
-            <button
-              key={id}
-              disabled={disabled}
-              onClick={() => onPick(id)}
-              title={owner ? owner.name : "open"}
-              style={{
-                ...styles.boardCell,
-                ...(isMe ? styles.boardCellMe : {}),
-                ...(disabled ? styles.boardCellTaken : {}),
-              }}
-            >
-              {id}
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={styles.lobbyFooter}>
-        {selectedBoards.length > 0 ? (
-          <div style={{ color: "#2FD9A8", fontWeight: 700, fontSize: 13 }}>
-            Your boards: {selectedBoards.map((b) => `#${b}`).join(", ")} &middot; stake deducts when the
-            round starts
-          </div>
-        ) : (
-          <div style={{ color: "#7C8AB0", fontSize: 13 }}>Tap up to {MAX_BOARDS_PER_PLAYER} open numbers to claim boards</div>
-        )}
-      </div>
     </div>
-  );
-}
 
-function Header({ title, subtitle }) {
-  return (
-    <div style={{ padding: "18px 16px 8px" }}>
-      <div className="display" style={styles.logo}>
-        <Sparkles size={20} color="#F4B740" style={{ marginRight: 6 }} />
-        {title}
-      </div>
-      <div style={{ color: "#7C8AB0", fontSize: 12.5, marginTop: 2 }}>{subtitle}</div>
+  </div>
+
+
+  <!-- CARD SELECT -->
+  <div class="screen" id="selectScreen">
+
+    <div class="stats">
+      <span>ROOM: <b id="selectRoom">20 ETB PLAY</b></span>
+      <span>PLAYERS: <b id="selectPlayers">0</b></span>
+      <span>CARDS: <b id="selectCards">0</b></span>
+      <span>PRIZE: <b id="selectPrize">0 ETB</b></span>
     </div>
-  );
-}
 
-function GameScreen({
-  profile,
-  distinctPlayers,
-  currentNumber,
-  calledNumbers,
-  cards,
-  calledSet,
-  marked,
-  autoBingo,
-  setAutoBingo,
-  onCellTap,
-  winningCard,
-  onClaim,
-}) {
-  const activeSet = autoBingo ? calledSet : marked;
-  return (
-    <div style={styles.screen}>
-      <div style={{ padding: "14px 16px 6px" }}>
-        <TopBar players={distinctPlayers} right={profile.balance} />
+    <div class="timer">
+      <span id="timer">50</span>
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-title">
+        PICK YOUR CARDS
       </div>
 
-      <div style={styles.callerWrap}>
-        {currentNumber ? (
-          <div
-            key={currentNumber}
-            className="cell-pop"
-            style={{
-              ...styles.callerOrb,
-              borderColor: colorFor(currentNumber),
-              color: colorFor(currentNumber),
-              animation: "pulseRing 1.6s infinite, popIn 0.3s ease-out",
-            }}
-          >
-            <span className="display" style={{ fontSize: 26, fontWeight: 800 }}>
-              {letterFor(currentNumber)}
-              {currentNumber}
-            </span>
-          </div>
-        ) : (
-          <div style={{ ...styles.callerOrb, borderColor: "#2A3760", color: "#7C8AB0" }}>
-            <span style={{ fontSize: 13 }}>starting…</span>
-          </div>
-        )}
-        <div style={{ color: "#7C8AB0", fontSize: 12, marginTop: 8 }}>{calledNumbers.length} / 75 called</div>
+      <input
+        class="search"
+        type="number"
+        min="1"
+        max="250"
+        id="search"
+        placeholder="Card 1 - 250"
+      >
+
+      <div class="card-grid" id="cardGrid"></div>
+
+      <div class="selection-info">
+        Selected: <b id="selectedCount">0</b> / 4 cards
       </div>
 
-      <div style={styles.calledStrip}>
-        {[...calledNumbers].slice(-10).reverse().map((n, i) => (
-          <div
-            key={calledNumbers.length - i}
-            style={{ ...styles.calledChip, borderColor: colorFor(n), color: colorFor(n), opacity: i === 0 ? 1 : 0.75 - i * 0.05 }}
-          >
-            {letterFor(n)}
-            {n}
-          </div>
-        ))}
+      <div class="selection-info" id="selectionMessage">
+        You can select up to 4 cards.
       </div>
 
-      {cards.length === 0 ? (
-        <div style={{ margin: "8px 16px", padding: 16, textAlign: "center", color: "#7C8AB0", fontSize: 13, border: "1px dashed #2A3760", borderRadius: 12 }}>
-          You didn't grab a board before this round started — spectating. Join a board in the next round's
-          lobby.
+      <button
+        class="start-game"
+        id="startButton"
+        onclick="startGame()"
+        disabled
+      >
+        WAITING FOR CARDS
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- GAME -->
+  <div class="screen" id="gameScreen">
+
+    <div class="stats">
+      <span>ROOM: <b id="gameRoom">20 ETB PLAY</b></span>
+      <span>PLAYERS: <b id="gamePlayers">0</b></span>
+      <span>CARDS: <b id="gameCards">0</b></span>
+      <span>PRIZE: <b id="gamePrize">0 ETB</b></span>
+    </div>
+
+    <div class="caller">
+
+      <div class="ball-ring">
+
+        <div class="ball">
+
+          <div class="ball-letter" id="ballLetter">-</div>
+
+          <div class="ball-number" id="ballNumber">
+            ?
+          </div>
+
         </div>
-      ) : (
-        <>
-          <div style={styles.toggleRow}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Switch checked={autoBingo} onChange={() => setAutoBingo((v) => !v)} />
-              <span style={{ fontSize: 13, color: "#EAF0FF", fontWeight: 600 }}>Auto Bingo</span>
-            </div>
-            <span style={{ fontSize: 11, color: "#4A567E" }}>marks numbers &amp; claims bingo for you</span>
-          </div>
 
-          {cards.map((c) => {
-            const cells = checkWin(c.grid, activeSet);
-            const ready = !!cells && (!winningCard || winningCard.boardId === c.id);
-            return (
-              <div key={c.id} style={styles.cardWrap}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ color: "#7C8AB0", fontSize: 12 }}>Board #{c.id}</span>
-                </div>
-
-                <div style={styles.bingoHeaderRow}>
-                  {COLUMNS.map((col) => (
-                    <div key={col.letter} style={{ ...styles.bingoHeaderCell, background: col.color }}>
-                      {col.letter}
-                    </div>
-                  ))}
-                </div>
-
-                <div style={styles.bingoGrid}>
-                  {c.grid.map((row, r) =>
-                    row.map((val, ci) => {
-                      const isFree = val === "FREE";
-                      const isCalled = !isFree && calledSet.has(val);
-                      const isMarked = isFree || activeSet.has(val);
-                      return (
-                        <button
-                          key={`${r}-${ci}`}
-                          onClick={() => !isFree && onCellTap(val)}
-                          disabled={isFree || (autoBingo ? true : !isCalled)}
-                          style={{
-                            ...styles.bingoCell,
-                            ...(isFree ? styles.bingoCellFree : {}),
-                            ...(isMarked && !isFree ? styles.bingoCellMarked : {}),
-                            ...(isCalled && !isMarked && !isFree ? styles.bingoCellClickable : {}),
-                          }}
-                        >
-                          {isFree ? "FREE" : val}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-
-                {!autoBingo && (
-                  <button
-                    onClick={() => onClaim({ boardId: c.id, cells })}
-                    disabled={!ready}
-                    style={{ ...styles.bingoBtn, ...(ready ? styles.bingoBtnReady : styles.bingoBtnOff) }}
-                  >
-                    BINGO!
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </>
-      )}
-      <div style={{ textAlign: "center", color: "#4A567E", fontSize: 11, padding: "10px 0 16px" }}>
-        Stake {STAKE} Br per board
       </div>
-    </div>
-  );
-}
 
-function Switch({ checked, onChange }) {
-  return (
-    <button
-      onClick={onChange}
-      style={{
-        width: 38,
-        height: 22,
-        borderRadius: 999,
-        border: "none",
-        padding: 2,
-        background: checked ? "#F4B740" : "#2A3760",
-        display: "flex",
-        justifyContent: checked ? "flex-end" : "flex-start",
-        transition: "background 0.2s",
-        cursor: "pointer",
-      }}
-    >
-      <div style={{ width: 18, height: 18, borderRadius: 999, background: "#0A0E1A" }} />
+      <div class="next-call" id="nextCall">
+        NEXT CALL IN 1S
+      </div>
+
+      <div class="called" id="calledNumbers">
+        0 called
+      </div>
+
+    </div>
+
+
+    <div id="playerCards"></div>
+
+    <button class="back" onclick="backToRooms()">
+      BACK TO ROOMS
     </button>
-  );
-}
 
-function WinOverlay({ winner, myId, cards, calledSet, secondsToNextRound }) {
-  const iWon = winner.id === myId;
-  const myCard = cards.find((c) => c.id === winner.boardId);
-  const winKeys = new Set(
-    myCard && iWon ? checkWin(myCard.grid, calledSet) || [] : []
-  );
-  const confetti = Array.from({ length: 24 }, (_, i) => i);
-  const confettiColors = ["#F4B740", "#FF5470", "#2FD9A8", "#4E9BFF", "#B57BFF"];
-  return (
-    <div style={styles.overlay}>
-      <div style={{ position: "relative", width: "100%", maxWidth: 340, overflow: "hidden" }}>
-        {iWon &&
-          confetti.map((i) => (
-            <div
-              key={i}
-              className="confetti"
-              style={{
-                left: `${(i * 37) % 100}%`,
-                width: 6,
-                height: 10,
-                background: confettiColors[i % confettiColors.length],
-                animationDuration: `${1.6 + (i % 5) * 0.3}s`,
-                animationDelay: `${(i % 6) * 0.12}s`,
-                borderRadius: 2,
-              }}
-            />
-          ))}
-        <div style={styles.winCard} className="cell-pop">
-          <Trophy size={34} color="#F4B740" style={{ animation: "softGlow 1.6s infinite" }} />
-          <div
-            className="display"
-            style={{ fontSize: 30, fontWeight: 800, color: "#FFD666", margin: "6px 0 2px", textShadow: "0 0 20px rgba(255,214,102,0.6)" }}
-          >
-            BINGO!
-          </div>
-          <div style={styles.winnerPill}>
-            {iWon ? "You won this round" : `Won by ${winner.name} — Board #${winner.boardId}`}
-          </div>
+  </div>
 
-          {iWon && myCard && (
-            <div style={styles.miniGrid}>
-              {myCard.grid.map((row, r) =>
-                row.map((val, c) => {
-                  const key = `${r}-${c}`;
-                  const isFree = val === "FREE";
-                  const isWin = winKeys.has(key);
-                  return (
-                    <div
-                      key={key}
-                      style={{
-                        ...styles.miniCell,
-                        ...(isFree ? { background: "#B57BFF", color: "#fff" } : {}),
-                        ...(isWin && !isFree ? { background: "#2FD9A8", color: "#0A0E1A" } : {}),
-                      }}
-                    >
-                      {isFree ? "★" : val}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
+</div>
 
-          {iWon && <div style={styles.payoutBox}>+{winner.payout} Br</div>}
 
-          <div style={{ marginTop: 18, color: "#7C8AB0", fontSize: 13 }}>Next round starts in {secondsToNextRound}s</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+<script>
 
-const styles = {
-  app: { minHeight: "100vh", background: "linear-gradient(180deg, #0A0E1A 0%, #0D1326 100%)", color: "#EAF0FF", display: "flex", justifyContent: "center" },
-  screen: { width: "100%", maxWidth: 420, paddingBottom: 20 },
-  logo: { fontSize: 24, fontWeight: 800, color: "#EAF0FF", display: "flex", alignItems: "center" },
-  topBar: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "0 16px" },
-  pill: { display: "flex", alignItems: "center", background: "#121A30", border: "1px solid #2A3760", borderRadius: 999, padding: "6px 12px", fontSize: 13 },
-  walletPill: { display: "flex", alignItems: "center", background: "#F4B740", borderRadius: 999, padding: "6px 12px", fontSize: 13 },
-  countdownWrap: { textAlign: "center", padding: "18px 16px 6px" },
-  progressTrack: { height: 5, background: "#1A2444", borderRadius: 999, marginTop: 10, overflow: "hidden" },
-  progressFill: { height: "100%", background: "linear-gradient(90deg,#F4B740,#FFD666)", borderRadius: 999, transition: "width 1s linear" },
-  sectionLabel: { fontSize: 12, color: "#7C8AB0", fontWeight: 700, letterSpacing: 0.3, padding: "16px 16px 8px" },
-  stakeFixed: { display: "inline-block", padding: "9px 16px", borderRadius: 10, border: "1px solid #F4B740", background: "#1A1608", color: "#F4B740", fontWeight: 800, fontSize: 13 },
-  boardGrid: { display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 6, padding: "0 16px", maxHeight: 280, overflowY: "auto" },
-  boardCell: { aspectRatio: "1", borderRadius: 8, border: "1px solid #2A3760", background: "#121A30", color: "#EAF0FF", fontWeight: 700, fontSize: 11, cursor: "pointer" },
-  boardCellMe: { background: "#4E9BFF", borderColor: "#4E9BFF", color: "#fff", boxShadow: "0 0 0 3px rgba(78,155,255,0.3)" },
-  boardCellTaken: { background: "#241826", borderColor: "#3A2436", color: "#7A5560", cursor: "not-allowed" },
-  lobbyFooter: { textAlign: "center", padding: "18px 16px 0" },
-  callerWrap: { textAlign: "center", padding: "18px 16px 6px" },
-  callerOrb: { width: 108, height: 108, borderRadius: "50%", border: "3px solid", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", background: "#121A30" },
-  calledStrip: { display: "flex", gap: 6, overflowX: "auto", padding: "10px 16px" },
-  calledChip: { flexShrink: 0, border: "1px solid", borderRadius: 8, padding: "5px 9px", fontSize: 12, fontWeight: 700, background: "#121A30" },
-  toggleRow: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 16px 14px" },
-  cardWrap: { margin: "0 16px 14px", background: "#121A30", border: "1px solid #2A3760", borderRadius: 16, padding: 12 },
-  bingoHeaderRow: { display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 6 },
-  bingoHeaderCell: { textAlign: "center", padding: "6px 0", borderRadius: 8, color: "#0A0E1A", fontWeight: 800, fontSize: 13 },
-  bingoGrid: { display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 },
-  bingoCell: { aspectRatio: "1", borderRadius: 8, border: "1px solid #2A3760", background: "#0D1326", color: "#7C8AB0", fontWeight: 700, fontSize: 12.5, cursor: "default" },
-  bingoCellFree: { background: "#B57BFF", color: "#fff", fontSize: 9, borderColor: "#B57BFF" },
-  bingoCellClickable: { borderColor: "#F4B740", color: "#F4B740", cursor: "pointer" },
-  bingoCellMarked: { background: "#2FD9A8", color: "#0A0E1A", borderColor: "#2FD9A8" },
-  bingoBtn: { display: "block", margin: "14px 0 0", width: "100%", padding: "12px 0", borderRadius: 14, border: "none", fontSize: 15, fontWeight: 800, letterSpacing: 0.5, cursor: "pointer" },
-  bingoBtnOff: { background: "#0D1326", color: "#4A567E" },
-  bingoBtnReady: { background: "linear-gradient(90deg,#F4B740,#FFD666)", color: "#0A0E1A", animation: "bingoBtnPulse 0.9s infinite", boxShadow: "0 0 24px rgba(244,183,64,0.5)" },
-  overlay: { position: "fixed", inset: 0, background: "rgba(6,9,18,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 50 },
-  winCard: { position: "relative", background: "#121A30", border: "1px solid #2A3760", borderRadius: 20, padding: "28px 22px", textAlign: "center" },
-  winnerPill: { display: "inline-block", background: "#1A2444", border: "1px solid #2A3760", borderRadius: 999, padding: "5px 14px", fontSize: 12.5, color: "#2FD9A8", fontWeight: 700 },
-  miniGrid: { display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4, margin: "8px auto 0", maxWidth: 220 },
-  miniCell: { aspectRatio: "1", borderRadius: 6, background: "#0D1326", color: "#7C8AB0", fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" },
-  payoutBox: { marginTop: 16, fontSize: 24, fontWeight: 800, color: "#F4B740" },
-  input: { width: "100%", padding: "12px 14px", borderRadius: 10, border: "1px solid #2A3760", background: "#121A30", color: "#EAF0FF", fontSize: 14, marginBottom: 14, outline: "none" },
-  playAgainBtn: { marginTop: 4, width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "linear-gradient(90deg,#4E9BFF,#B57BFF)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer" },
-  toast: { position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "#1A2444", border: "1px solid #2A3760", padding: "10px 16px", borderRadius: 10, fontSize: 12.5, color: "#EAF0FF", zIndex: 60, cursor: "pointer" },
+const MAX_CARDS_PER_PLAYER = 4;
+const SELECT_TIME = 50;
+const CALL_SPEED = 1000;
+
+const ROOMS = {
+
+  20:{
+    name:"20 ETB PLAY",
+    entry:20,
+    perCardPrize:17
+  },
+
+  40:{
+    name:"40 ETB PLAY",
+    entry:40,
+    perCardPrize:37
+  }
+
 };
+
+let currentRoom = null;
+
+let selectedCards = [];
+
+let selectedCardNumbers = new Set();
+
+let calledNumbers = [];
+
+let remainingNumbers = [];
+
+let timerInterval = null;
+
+let callerInterval = null;
+
+let gameRunning = false;
+
+let gameOver = false;
+
+
+/* BALANCE DISPLAY */
+
+let balance = 0;
+
+function updateBalance(){
+
+  document.getElementById("balance").textContent =
+    balance + " ETB";
+
+}
+
+
+/* ROOM STATE */
+
+let roomState = {
+
+  20:{
+    players:0,
+    cards:0
+  },
+
+  40:{
+    players:0,
+    cards:0
+  }
+
+};
+
+
+/* PRIZE */
+
+function getPrize(roomPrice,cards){
+
+  if(cards <= 0) return 0;
+
+  return cards * ROOMS[roomPrice].perCardPrize;
+
+}
+
+
+/* UPDATE ROOMS */
+
+function updateRooms(){
+
+  document.getElementById("room20Players").textContent =
+    roomState[20].players;
+
+  document.getElementById("room20Cards").textContent =
+    roomState[20].cards;
+
+  document.getElementById("room20Prize").textContent =
+    getPrize(20,roomState[20].cards) + " ETB";
+
+
+  document.getElementById("room40Players").textContent =
+    roomState[40].players;
+
+  document.getElementById("room40Cards").textContent =
+    roomState[40].cards;
+
+  document.getElementById("room40Prize").textContent =
+    getPrize(40,roomState[40].cards) + " ETB";
+
+}
+
+
+/* OPEN ROOM */
+
+function openRoom(price){
+
+  currentRoom = price;
+
+  selectedCards = [];
+
+  selectedCardNumbers.clear();
+
+  document.getElementById("roomsScreen")
+    .classList.remove("active");
+
+  document.getElementById("selectScreen")
+    .classList.add("active");
+
+  document.getElementById("selectRoom").textContent =
+    ROOMS[price].name;
+
+  renderCardPicker();
+
+  updateSelection();
+
+  startSelectionTimer();
+
+}
+
+
+/* CARD PICKER */
+
+function renderCardPicker(){
+
+  const grid =
+    document.getElementById("cardGrid");
+
+  grid.innerHTML = "";
+
+  for(let n=1;n<=250;n++){
+
+    const button =
+      document.createElement("button");
+
+    button.className =
+      "card-choice";
+
+    button.textContent = n;
+
+    button.dataset.number = n;
+
+    button.onclick = function(){
+
+      selectCard(n,button);
+
+    };
+
+    grid.appendChild(button);
+
+  }
+
+}
+
+
+/* SELECT CARD */
+
+function selectCard(number,button){
+
+  if(selectedCardNumbers.has(number)){
+
+    selectedCardNumbers.delete(number);
+
+    selectedCards =
+      selectedCards.filter(n => n !== number);
+
+    button.classList.remove("selected");
+
+    updateSelection();
+
+    return;
+
+  }
+
+
+  if(selectedCards.length >= MAX_CARDS_PER_PLAYER){
+
+    document.getElementById("selectionMessage").textContent =
+      "Maximum 4 cards per player.";
+
+    return;
+
+  }
+
+
+  selectedCards.push(number);
+
+  selectedCardNumbers.add(number);
+
+  button.classList.add("selected");
+
+  document.getElementById("selectionMessage").textContent =
+    "Card #" + number + " selected.";
+
+  updateSelection();
+
+}
+
+
+/* UPDATE SELECTION */
+
+function updateSelection(){
+
+  const count =
+    selectedCards.length;
+
+  document.getElementById("selectedCount")
+    .textContent = count;
+
+
+  const startButton =
+    document.getElementById("startButton");
+
+
+  if(count > 0){
+
+    startButton.disabled = false;
+
+    startButton.textContent =
+      "START WITH " +
+      count +
+      " CARD" +
+      (count > 1 ? "S" : "");
+
+  }else{
+
+    startButton.disabled = true;
+
+    startButton.textContent =
+      "SELECT A CARD";
+
+  }
+
+
+  const simulatedCards =
+    roomState[currentRoom].cards + count;
+
+  const simulatedPlayers =
+    roomState[currentRoom].players + 1;
+
+
+  document.getElementById("selectPlayers")
+    .textContent =
+      simulatedPlayers;
+
+  document.getElementById("selectCards")
+    .textContent =
+      simulatedCards;
+
+  document.getElementById("selectPrize")
+    .textContent =
+      getPrize(
+        currentRoom,
+        simulatedCards
+      ) + " ETB";
+
+}
+
+
+/* COUNTDOWN */
+
+function startSelectionTimer(){
+
+  clearInterval(timerInterval);
+
+  let seconds =
+    SELECT_TIME;
+
+  document.getElementById("timer").textContent =
+    seconds;
+
+
+  timerInterval =
+    setInterval(()=>{
+
+      seconds--;
+
+      document.getElementById("timer").textContent =
+        seconds;
+
+
+      if(seconds <= 0){
+
+        clearInterval(timerInterval);
+
+        if(selectedCards.length > 0){
+
+          startGame();
+
+        }else{
+
+          backToRooms();
+
+        }
+
+      }
+
+    },1000);
+
+}
+
+
+/* START GAME */
+
+function startGame(){
+
+  if(selectedCards.length === 0)
+    return;
+
+  clearInterval(timerInterval);
+
+
+  roomState[currentRoom].players += 1;
+
+  roomState[currentRoom].cards +=
+    selectedCards.length;
+
+
+  document.getElementById("gameRoom").textContent =
+    ROOMS[currentRoom].name;
+
+  document.getElementById("gamePlayers").textContent =
+    roomState[currentRoom].players;
+
+  document.getElementById("gameCards").textContent =
+    roomState[currentRoom].cards;
+
+  document.getElementById("gamePrize").textContent =
+    getPrize(
+      currentRoom,
+      roomState[currentRoom].cards
+    ) + " ETB";
+
+
+  document.getElementById("selectScreen")
+    .classList.remove("active");
+
+  document.getElementById("gameScreen")
+    .classList.add("active");
+
+
+  createPlayerCards();
+
+  startCaller();
+
+  updateRooms();
+
+}
+
+
+/* CREATE PLAYER CARDS */
+
+function createPlayerCards(){
+
+  const container =
+    document.getElementById("playerCards");
+
+  container.innerHTML = "";
+
+
+  selectedCards.forEach((cardNumber,index)=>{
+
+    const cardBox =
+      document.createElement("div");
+
+    cardBox.className =
+      "bingo-card";
+
+    cardBox.style.marginBottom =
+      "20px";
+
+
+    const title =
+      document.createElement("div");
+
+    title.style.textAlign =
+      "center";
+
+    title.style.color =
+      "#777f91";
+
+    title.style.marginBottom =
+      "10px";
+
+    title.textContent =
+      "CARD #" + cardNumber;
+
+
+    cardBox.appendChild(title);
+
+
+    const header =
+      document.createElement("div");
+
+    header.className =
+      "bingo-header";
+
+
+    ["B","I","N","G","O"].forEach(letter=>{
+
+      const h =
+        document.createElement("div");
+
+      h.textContent =
+        letter;
+
+      header.appendChild(h);
+
+    });
+
+
+    cardBox.appendChild(header);
+
+
+    const grid =
+      document.createElement("div");
+
+    grid.className =
+      "bingo-grid";
+
+
+    const card =
+      generateBingoCard(cardNumber);
+
+
+    for(let row=0;row<5;row++){
+
+      for(let col=0;col<5;col++){
+
+        const cell =
+          document.createElement("div");
+
+        cell.className =
+          "cell";
+
+
+        if(row===2 && col===2){
+
+          cell.classList.add("free");
+
+          cell.textContent =
+            "FREE";
+
+        }else{
+
+          cell.textContent =
+            card[row][col];
+
+        }
+
+
+        cell.dataset.number =
+          card[row][col] || "";
+
+
+        grid.appendChild(cell);
+
+      }
+
+    }
+
+
+    cardBox.appendChild(grid);
+
+
+    const status =
+      document.createElement("div");
+
+    status.className =
+      "selection-info";
+
+    status.id =
+      "cardStatus_" + index;
+
+    status.textContent =
+      "Waiting for numbers...";
+
+
+    cardBox.appendChild(status);
+
+    container.appendChild(cardBox);
+
+  });
+
+}
+
+
+/* BINGO CARD */
+
+function generateBingoCard(seed){
+
+  const columns = [
+
+    range(1,15),
+
+    range(16,30),
+
+    range(31,45),
+
+    range(46,60),
+
+    range(61,75)
+
+  ];
+
+
+  const result =
+    Array.from(
+      {length:5},
+      ()=>Array(5).fill(null)
+    );
+
+
+  for(let col=0;col<5;col++){
+
+    const numbers =
+      shuffle([...columns[col]])
+      .slice(0,5);
+
+
+    for(let row=0;row<5;row++){
+
+      if(row===2 && col===2){
+
+        result[row][col] =
+          null;
+
+      }else{
+
+        result[row][col] =
+          numbers[row];
+
+      }
+
+    }
+
+  }
+
+
+  return result;
+
+}
+
+
+function range(start,end){
+
+  const result = [];
+
+  for(let n=start;n<=end;n++){
+
+    result.push(n);
+
+  }
+
+  return result;
+
+}
+
+
+function shuffle(array){
+
+  for(
+    let i=array.length-1;
+    i>0;
+    i--
+  ){
+
+    const j =
+      Math.floor(
+        Math.random()*(i+1)
+      );
+
+
+    [array[i],array[j]] =
+      [array[j],array[i]];
+
+  }
+
+  return array;
+
+}
+
+
+/* AUTOMATIC CALLER */
+
+function startCaller(){
+
+  clearInterval(callerInterval);
+
+  calledNumbers = [];
+
+  remainingNumbers =
+    shuffle(
+      range(1,75)
+    );
+
+  gameRunning = true;
+
+  gameOver = false;
+
+
+  callNumber();
+
+
+  callerInterval =
+    setInterval(()=>{
+
+      if(!gameRunning || gameOver)
+        return;
+
+      callNumber();
+
+    },CALL_SPEED);
+
+}
+
+
+/* CALL NUMBER */
+
+function callNumber(){
+
+  if(remainingNumbers.length === 0){
+
+    stopCaller();
+
+    return;
+
+  }
+
+
+  const number =
+    remainingNumbers.shift();
+
+
+  calledNumbers.push(number);
+
+
+  const letter =
+    getLetter(number);
+
+
+  document.getElementById("ballLetter")
+    .textContent =
+      letter;
+
+  document.getElementById("ballNumber")
+    .textContent =
+      number;
+
+
+  document.getElementById("calledNumbers")
+    .textContent =
+      calledNumbers.length +
+      " called";
+
+
+  document.getElementById("nextCall")
+    .textContent =
+      "NEXT CALL IN 1S";
+
+
+  markNumber(number);
+
+}
+
+
+/* BINGO LETTER */
+
+function getLetter(number){
+
+  if(number <= 15)
+    return "B";
+
+  if(number <= 30)
+    return "I";
+
+  if(number <= 45)
+    return "N";
+
+  if(number <= 60)
+    return "G";
+
+  return "O";
+
+}
+
+
+/* MARK NUMBERS */
+
+function markNumber(number){
+
+  const cards =
+    document.querySelectorAll(
+      ".bingo-card"
+    );
+
+
+  cards.forEach((cardBox,index)=>{
+
+    const cells =
+      cardBox.querySelectorAll(
+        ".cell"
+      );
+
+
+    cells.forEach(cell=>{
+
+      if(
+        Number(cell.dataset.number)
+        === number
+      ){
+
+        cell.classList.add("marked");
+
+      }
+
+    });
+
+
+    checkBingo(
+      cardBox,
+      index
+    );
+
+  });
+
+}
+
+
+/* CHECK BINGO */
+
+function checkBingo(cardBox,index){
+
+  const cells =
+    cardBox.querySelectorAll(
+      ".cell"
+    );
+
+
+  function marked(row,col){
+
+    return cells[row*5+col]
+      .classList.contains("marked")
+      ||
+      cells[row*5+col]
+      .classList.contains("free");
+
+  }
+
+
+  for(let row=0;row<5;row++){
+
+    let win=true;
+
+
+    for(let col=0;col<5;col++){
+
+      if(!marked(row,col)){
+
+        win=false;
+
+        break;
+
+      }
+
+    }
+
+
+    if(win){
+
+      playerWon(
+        cardBox,
+        index
+      );
+
+      return;
+
+    }
+
+  }
+
+
+  for(let col=0;col<5;col++){
+
+    let win=true;
+
+
+    for(let row=0;row<5;row++){
+
+      if(!marked(row,col)){
+
+        win=false;
+
+        break;
+
+      }
+
+    }
+
+
+    if(win){
+
+      playerWon(
+        cardBox,
+        index
+      );
+
+      return;
+
+    }
+
+  }
+
+
+  let diagonal1=true;
+
+  let diagonal2=true;
+
+
+  for(let i=0;i<5;i++){
+
+    if(!marked(i,i))
+      diagonal1=false;
+
+    if(!marked(i,4-i))
+      diagonal2=false;
+
+  }
+
+
+  if(diagonal1 || diagonal2){
+
+    playerWon(
+      cardBox,
+      index
+    );
+
+  }
+
+}
+
+
+/* WIN */
+
+function playerWon(cardBox,index){
+
+  if(gameOver)
+    return;
+
+  gameOver=true;
+
+  stopCaller();
+
+
+  const win =
+    document.createElement("div");
+
+  win.className =
+    "win";
+
+  win.textContent =
+    "BINGO!";
+
+
+  const prize =
+    document.createElement("div");
+
+  prize.className =
+    "prize";
+
+  prize.textContent =
+    "PRIZE: " +
+    getPrize(
+      currentRoom,
+      roomState[currentRoom].cards
+    ) +
+    " ETB";
+
+
+  cardBox.appendChild(win);
+
+  cardBox.appendChild(prize);
+
+}
+
+
+/* STOP CALLER */
+
+function stopCaller(){
+
+  clearInterval(callerInterval);
+
+  gameRunning=false;
+
+}
+
+
+/* BACK */
+
+function backToRooms(){
+
+  clearInterval(timerInterval);
+
+  stopCaller();
+
+
+  document.getElementById("gameScreen")
+    .classList.remove("active");
+
+  document.getElementById("selectScreen")
+    .classList.remove("active");
+
+  document.getElementById("roomsScreen")
+    .classList.add("active");
+
+
+  updateRooms();
+
+}
+
+
+/* SEARCH */
+
+document.getElementById("search")
+.addEventListener(
+  "input",
+  function(){
+
+    const number =
+      Number(this.value);
+
+
+    if(
+      number < 1 ||
+      number > 250
+    )
+      return;
+
+
+    const button =
+      document.querySelector(
+        '.card-choice[data-number="' +
+        number +
+        '"]'
+      );
+
+
+    if(button){
+
+      button.scrollIntoView({
+        behavior:"smooth",
+        block:"center"
+      });
+
+    }
+
+  }
+);
+
+
+/* INITIALIZE */
+
+updateBalance();
+updateRooms();
+
+
+</script>
+
+</body>
+  </html>
